@@ -152,9 +152,6 @@ function ClientPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [clients, setClients] = useState<Client[]>([]);
 
-    console.log('URL clients:', process.env.SUPABASE_URL);
-    console.log('Key clients:', process.env.SUPABASE_KEY);
-
     useEffect(() => {
         const fetchClients = async () => {
             setIsLoading(true);
@@ -211,10 +208,10 @@ function ClientPage() {
                 {filteredClients.map(client => (
                     <Box key={client.cpf} w="100%" >
                         <Flex w="100%" p="2" borderRadius="md" bg="gray.100" _hover={{ bg: 'pink.400', color: 'white', cursor: 'pointer' }} onClick={() => onClientCardOpen(client)}>
-                            <Text fontSize="lg" fontWeight="bold">{`${client.nome} ${client.sobrenome} (${client.apelido})`}</Text>
+                        <Text fontSize="lg" fontWeight="bold">{`${client.nome} ${client.sobrenome}${client.apelido ? ` (${client.apelido})` : ''}`}</Text>
+
                         </Flex>
                     </Box>
-
                 ))}
             </VStack>
             <ClientCard isOpen={isClientCardOpen} onClose={onClientCardClose} client={selectedClient} />
