@@ -51,10 +51,9 @@ export const ClientCard = ({isOpen, onClose, initialRef, client, setClient}: Cli
         setIsLoading(true);
         setErrorMessage("");
         let supabaseError;
-        let updatedClient;
 
         if (client) {
-            const {data: clientReturn, error} = await supabase
+            const {error} = await supabase
                 .from("clientes")
                 .update(
                     {
@@ -69,9 +68,8 @@ export const ClientCard = ({isOpen, onClose, initialRef, client, setClient}: Cli
                     } as ClientUpdate)
                 .eq("id", client.id);
             supabaseError = error
-            updatedClient = clientReturn;
         } else {
-            const {data: newClient, error} = await supabase
+            const {error} = await supabase
                 .from("clientes")
                 .insert(
                     {
@@ -85,7 +83,6 @@ export const ClientCard = ({isOpen, onClose, initialRef, client, setClient}: Cli
                         numero_endereco: numero_endereco,
                     } as ClientInsert);
             supabaseError = error;
-            updatedClient = newClient;
         }
         setIsLoading(false)
 
@@ -110,6 +107,20 @@ export const ClientCard = ({isOpen, onClose, initialRef, client, setClient}: Cli
         setIsEditing(false);
         window.location.reload();
         onClose();
+    }
+
+    const handleDeleteClient = async () => {
+        if (client) {
+            const {error} = await supabase
+                .from("clientes")
+                .delete()
+                .eq("id", client.id);
+            if (error) {
+                setErrorMessage(error.message);
+            } else {
+                closeHandler();
+            }
+        }
     }
 
     return (
@@ -221,11 +232,11 @@ export const ClientCard = ({isOpen, onClose, initialRef, client, setClient}: Cli
                                     isChecked={isEditing}>
                                     Editar</Switch>
                                 <Button
-                                    onClick={closeHandler}
+                                    onClick={handleDeleteClient}
                                     colorScheme="red"
-                                    type="reset"
-                                    isDisabled={isLoading}>
-                                    Cancelar
+                                    type="button"
+                                    isDisabled={!isEditing}>
+                                    Excluir
                                 </Button>
                                 <Button
                                     isDisabled={!isEditing}
