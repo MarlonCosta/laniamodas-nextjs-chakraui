@@ -2,8 +2,9 @@ import React, {useEffect, useState} from "react";
 import {supabase} from "@/lib/supabase";
 import {Database} from "@/lib/database.types";
 import {Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay} from "@chakra-ui/modal";
-import {Alert, AlertIcon, Button, ButtonGroup, FormControl, FormLabel, Input, Switch, Text} from "@chakra-ui/react";
+import {Alert, AlertIcon, Button, ButtonGroup, FormControl, FormLabel, Grid, GridItem, Input, InputGroup, InputLeftElement, Switch, Text} from "@chakra-ui/react";
 import InputMask from "react-input-mask";
+import {FaIdCard, FaInstagram, FaMapMarkerAlt, FaPhoneAlt} from "react-icons/fa";
 
 type Client = Database['public']['Tables']['clientes']['Row'];
 type ClientInsert = Database['public']['Tables']['clientes']['Insert'];
@@ -28,8 +29,8 @@ export const ClientCard = ({isOpen, onClose, initialRef, client, setClient}: Cli
     const [numero_endereco, setNumero_endereco] = useState(client?.numero_endereco);
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
-
     const [isEditing, setIsEditing] = useState(false);
+
     useEffect(() => {
         if (client) {
             setNome(client.nome);
@@ -128,7 +129,8 @@ export const ClientCard = ({isOpen, onClose, initialRef, client, setClient}: Cli
             isOpen={isOpen}
             onClose={closeHandler}
             initialFocusRef={initialRef}
-            isCentered>
+            isCentered
+            size={"4xl"}>
             <ModalOverlay>
                 <ModalContent>
                     <form onSubmit={submitHandler}>
@@ -142,87 +144,127 @@ export const ClientCard = ({isOpen, onClose, initialRef, client, setClient}: Cli
                                     <Text textAlign="center">{errorMessage}</Text>
                                 </Alert>
                             )}
-                            <FormControl isRequired={true}>
-                                <FormLabel>Nome</FormLabel>
-                                <Input disabled={!isEditing}
-                                       ref={initialRef}
-                                       placeholder="Nome"
-                                       value={nome}
-                                       onChange={(event) => setNome(event.target.value)}
-                                       bg={"yellow.100"}
-                                       _disabled={{bg: "white", caretColor: "black"}}
-                                />
-                            </FormControl>
-                            <FormControl isRequired={true}>
-                                <FormLabel>Sobrenome</FormLabel>
-                                <Input disabled={!isEditing}
-                                       placeholder="Sobrenome"
-                                       value={sobrenome}
-                                       onChange={(event) => setSobrenome(event.target.value)}
-                                       bg={"yellow.100"}
-                                       _disabled={{bg: "white"}}/>
-                            </FormControl>
-                            <FormControl>
-                                <FormLabel>Apelido</FormLabel>
-                                <Input disabled={!isEditing}
-                                       placeholder="Apelido"
-                                       value={apelido ?? ''}
-                                       onChange={(event) => setApelido(event.target.value)}
-                                       bg={"yellow.100"}
-                                       _disabled={{bg: "white"}}/>
-                            </FormControl>
-                            <FormControl>
-                                <FormLabel>CPF</FormLabel>
-                                <Input
-                                    as={InputMask} mask="999.999.999-99"
-                                    disabled={!isEditing}
-                                    placeholder="CPF"
-                                    value={cpf}
-                                    onChange={(event) => setCpf(event.target.value)}
-                                    bg={"yellow.100"}
-                                    _disabled={{bg: "white"}}/>
-                            </FormControl>
+                            <Grid templateRows='repeat(4, 1fr)'
+                                  templateColumns='repeat(6, 1fr)'
+                                  gap={1}>
+                                <GridItem colSpan={2}>
+                                    <FormControl isRequired={true}>
+                                        <FormLabel>Nome</FormLabel>
+                                        <Input disabled={!isEditing}
+                                               ref={initialRef}
+                                               placeholder="Nome"
+                                               value={nome}
+                                               onChange={(event) => setNome(event.target.value)}
+                                               bg={"yellow.100"}
+                                               _disabled={{bg: "white", caretColor: "black"}}
+                                        />
+                                    </FormControl>
+                                </GridItem>
+                                <GridItem colSpan={2}>
+                                    <FormControl isRequired={true}>
+                                        <FormLabel>Sobrenome</FormLabel>
+                                        <Input disabled={!isEditing}
+                                               placeholder="Sobrenome"
+                                               value={sobrenome}
+                                               onChange={(event) => setSobrenome(event.target.value)}
+                                               bg={"yellow.100"}
+                                               _disabled={{bg: "white"}}/>
+                                    </FormControl>
+                                </GridItem>
+                                <GridItem colSpan={2}>
+                                    <FormControl>
+                                        <FormLabel>Apelido</FormLabel>
+                                        <Input disabled={!isEditing}
+                                               placeholder="Apelido"
+                                               value={apelido ?? ''}
+                                               onChange={(event) => setApelido(event.target.value)}
+                                               bg={"yellow.100"}
+                                               _disabled={{bg: "white"}}/>
+                                    </FormControl>
+                                </GridItem>
+                                <GridItem colSpan={2}>
+                                    <FormControl>
+                                        <FormLabel>CPF</FormLabel>
+                                        <InputGroup>
+                                            <InputLeftElement>
+                                                <FaIdCard/>
+                                            </InputLeftElement>
+                                            <Input
+                                                as={InputMask} mask="999.999.999-99"
+                                                disabled={!isEditing}
+                                                placeholder="CPF"
+                                                value={cpf}
+                                                onChange={(event) => setCpf(event.target.value)}
+                                                bg={"yellow.100"}
+                                                _disabled={{bg: "white"}}/>
+                                        </InputGroup>
 
-                            <FormControl isRequired={true}>
-                                <FormLabel>Telefone</FormLabel>
-                                <Input as={InputMask} mask="(99)99999-9999"
-                                       disabled={!isEditing}
-                                       placeholder="Telefone"
-                                       value={telefone}
-                                       onChange={(event) => setTelefone(event.target.value)}
-                                       bg={"yellow.100"}
-                                       _disabled={{bg: "white"}}/>
-                            </FormControl>
+                                    </FormControl>
+                                </GridItem>
+                                <GridItem colSpan={2}>
+                                    <FormControl isRequired={true}>
+                                        <FormLabel>Telefone</FormLabel>
+                                        <InputGroup>
+                                            <InputLeftElement>
+                                                <FaPhoneAlt/>
+                                            </InputLeftElement>
+                                            <Input as={InputMask} mask="(99)99999-9999"
+                                                   disabled={!isEditing}
+                                                   placeholder="Telefone"
+                                                   value={telefone}
+                                                   onChange={(event) => setTelefone(event.target.value)}
+                                                   bg={"yellow.100"}
+                                                   _disabled={{bg: "white"}}/>
+                                        </InputGroup>
+                                    </FormControl>
+                                </GridItem>
+                                <GridItem colSpan={2}>
+                                    <FormControl>
+                                        <FormLabel>Instagram</FormLabel>
+                                        <InputGroup>
+                                            <InputLeftElement>
+                                                <FaInstagram/>
+                                            </InputLeftElement>
+                                            <Input disabled={!isEditing}
+                                                   placeholder="Instagram"
+                                                   value={instagram ?? ''}
+                                                   onChange={(event) => setInstagram(event.target.value)}
+                                                   bg={"yellow.100"}
+                                                   _disabled={{bg: "white"}}/>
+                                        </InputGroup>
 
-                            <FormControl>
-                                <FormLabel>Instagram</FormLabel>
-                                <Input disabled={!isEditing}
-                                       placeholder="Instagram"
-                                       value={instagram ?? ''}
-                                       onChange={(event) => setInstagram(event.target.value)}
-                                       bg={"yellow.100"}
-                                       _disabled={{bg: "white"}}/>
-                            </FormControl>
+                                    </FormControl>
+                                </GridItem>
+                                <GridItem colSpan={4}>
+                                    <FormControl isRequired={true}>
+                                        <FormLabel>Endereço</FormLabel>
+                                        <InputGroup>
+                                            <InputLeftElement>
+                                                <FaMapMarkerAlt/>
+                                            </InputLeftElement>
+                                            <Input disabled={!isEditing}
+                                                   placeholder="Endereço"
+                                                   value={endereco}
+                                                   onChange={(event) => setEndereco(event.target.value)}
+                                                   bg={"yellow.100"}
+                                                   _disabled={{bg: "white"}}/>
+                                        </InputGroup>
+                                    </FormControl>
+                                </GridItem>
+                                <GridItem colSpan={2}>
+                                    <FormControl isRequired={true}>
+                                        <FormLabel>Número</FormLabel>
+                                        <Input disabled={!isEditing}
+                                               type={"number"}
+                                               placeholder="00"
+                                               value={numero_endereco}
+                                               onChange={(event) => setNumero_endereco(parseInt(event.target.value))}
+                                               bg={"yellow.100"}
+                                               _disabled={{bg: "white"}}/>
+                                    </FormControl>
+                                </GridItem>
+                            </Grid>
 
-                            <FormControl isRequired={true}>
-                                <FormLabel>Endereço</FormLabel>
-                                <Input disabled={!isEditing}
-                                       placeholder="Endereço"
-                                       value={endereco}
-                                       onChange={(event) => setEndereco(event.target.value)}
-                                       bg={"yellow.100"}
-                                       _disabled={{bg: "white"}}/>
-                            </FormControl>
-
-                            <FormControl isRequired={true}>
-                                <FormLabel>Número</FormLabel>
-                                <Input disabled={!isEditing}
-                                       placeholder="00"
-                                       value={numero_endereco}
-                                       onChange={(event) => setNumero_endereco(parseInt(event.target.value))}
-                                       bg={"yellow.100"}
-                                       _disabled={{bg: "white"}}/>
-                            </FormControl>
                         </ModalBody>
 
                         <ModalFooter>
@@ -230,7 +272,8 @@ export const ClientCard = ({isOpen, onClose, initialRef, client, setClient}: Cli
                                 <Switch
                                     onChange={() => setIsEditing(!isEditing)}
                                     isChecked={isEditing}>
-                                    Editar</Switch>
+                                    Editar
+                                </Switch>
                                 <Button
                                     onClick={handleDeleteClient}
                                     colorScheme="red"
