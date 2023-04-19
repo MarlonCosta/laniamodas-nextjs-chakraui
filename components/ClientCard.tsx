@@ -2,7 +2,8 @@ import React, {useEffect, useState} from "react";
 import {supabase} from "@/lib/supabase";
 import {Database} from "@/lib/database.types";
 import {Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay} from "@chakra-ui/modal";
-import {Alert, AlertIcon, Button, ButtonGroup, FormControl, FormLabel, Input, Text} from "@chakra-ui/react";
+import {Alert, AlertIcon, Button, ButtonGroup, FormControl, FormLabel, Input, Switch, Text} from "@chakra-ui/react";
+import InputMask from "react-input-mask";
 
 type Client = Database['public']['Tables']['clientes']['Row'];
 type ClientInsert = Database['public']['Tables']['clientes']['Insert'];
@@ -28,6 +29,7 @@ export const ClientCard = ({isOpen, onClose, initialRef, client, setClient}: Cli
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
 
+    const [isEditing, setIsEditing] = useState(false);
     useEffect(() => {
         if (client) {
             setNome(client.nome);
@@ -40,6 +42,9 @@ export const ClientCard = ({isOpen, onClose, initialRef, client, setClient}: Cli
             setNumero_endereco(client.numero_endereco);
         }
     }, [client]);
+    const filterNumbers = (value: string) => {
+        return value.replace(/\D/g, '');
+    }
 
     const submitHandler = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -73,8 +78,8 @@ export const ClientCard = ({isOpen, onClose, initialRef, client, setClient}: Cli
                         nome: nome,
                         sobrenome: sobrenome,
                         apelido: apelido,
-                        cpf: cpf,
-                        telefone: telefone,
+                        cpf: filterNumbers(cpf!),
+                        telefone: filterNumbers(telefone!),
                         instagram: instagram,
                         endereco: endereco,
                         numero_endereco: numero_endereco,
@@ -100,7 +105,9 @@ export const ClientCard = ({isOpen, onClose, initialRef, client, setClient}: Cli
         setInstagram("");
         setEndereco("");
         setNumero_endereco(-1);
+        // setIsEditing(false);
         setClient(null);
+        setIsEditing(false);
         window.location.reload();
         onClose();
     }
@@ -117,6 +124,7 @@ export const ClientCard = ({isOpen, onClose, initialRef, client, setClient}: Cli
                         <ModalHeader bg={"pink.400"} color={"white"}>{client ? `${client.nome} ${client.sobrenome} ${client.apelido ? ` (${client.apelido})` : ""}` : "Criar cliente"}</ModalHeader>
                         <ModalCloseButton onClick={closeHandler} color={"white"}/>
                         <ModalBody pb={6}>
+
                             {errorMessage && (
                                 <Alert status="error" borderRadius="lg" mb="6">
                                     <AlertIcon/>
@@ -125,72 +133,93 @@ export const ClientCard = ({isOpen, onClose, initialRef, client, setClient}: Cli
                             )}
                             <FormControl isRequired={true}>
                                 <FormLabel>Nome</FormLabel>
-                                <Input
-                                    ref={initialRef}
-                                    placeholder="Nome"
-                                    value={nome}
-                                    onChange={(event) => setNome(event.target.value)}/>
+                                <Input disabled={!isEditing}
+                                       ref={initialRef}
+                                       placeholder="Nome"
+                                       value={nome}
+                                       onChange={(event) => setNome(event.target.value)}
+                                       bg={"yellow.100"}
+                                       _disabled={{bg: "white", caretColor: "black"}}
+                                />
                             </FormControl>
-
                             <FormControl isRequired={true}>
                                 <FormLabel>Sobrenome</FormLabel>
-                                <Input
-                                    placeholder="Sobrenome"
-                                    value={sobrenome}
-                                    onChange={(event) => setSobrenome(event.target.value)}/>
+                                <Input disabled={!isEditing}
+                                       placeholder="Sobrenome"
+                                       value={sobrenome}
+                                       onChange={(event) => setSobrenome(event.target.value)}
+                                       bg={"yellow.100"}
+                                       _disabled={{bg: "white"}}/>
                             </FormControl>
-
                             <FormControl>
                                 <FormLabel>Apelido</FormLabel>
-                                <Input
-                                    placeholder="Apelido"
-                                    value={apelido ?? ''}
-                                    onChange={(event) => setApelido(event.target.value)}/>
+                                <Input disabled={!isEditing}
+                                       placeholder="Apelido"
+                                       value={apelido ?? ''}
+                                       onChange={(event) => setApelido(event.target.value)}
+                                       bg={"yellow.100"}
+                                       _disabled={{bg: "white"}}/>
                             </FormControl>
-
                             <FormControl>
                                 <FormLabel>CPF</FormLabel>
                                 <Input
+                                    as={InputMask} mask="999.999.999-99"
+                                    disabled={!isEditing}
                                     placeholder="CPF"
                                     value={cpf}
-                                    onChange={(event) => setCpf(event.target.value)}/>
+                                    onChange={(event) => setCpf(event.target.value)}
+                                    bg={"yellow.100"}
+                                    _disabled={{bg: "white"}}/>
                             </FormControl>
 
                             <FormControl isRequired={true}>
                                 <FormLabel>Telefone</FormLabel>
-                                <Input
-                                    placeholder="Telefone"
-                                    value={telefone}
-                                    onChange={(event) => setTelefone(event.target.value)}/>
+                                <Input as={InputMask} mask="(99)99999-9999"
+                                       disabled={!isEditing}
+                                       placeholder="Telefone"
+                                       value={telefone}
+                                       onChange={(event) => setTelefone(event.target.value)}
+                                       bg={"yellow.100"}
+                                       _disabled={{bg: "white"}}/>
                             </FormControl>
 
                             <FormControl>
                                 <FormLabel>Instagram</FormLabel>
-                                <Input
-                                    placeholder="Instagram"
-                                    value={instagram ?? ''}
-                                    onChange={(event) => setInstagram(event.target.value)}/>
+                                <Input disabled={!isEditing}
+                                       placeholder="Instagram"
+                                       value={instagram ?? ''}
+                                       onChange={(event) => setInstagram(event.target.value)}
+                                       bg={"yellow.100"}
+                                       _disabled={{bg: "white"}}/>
                             </FormControl>
 
                             <FormControl isRequired={true}>
                                 <FormLabel>Endereço</FormLabel>
-                                <Input
-                                    placeholder="Endereço"
-                                    value={endereco}
-                                    onChange={(event) => setEndereco(event.target.value)}/>
+                                <Input disabled={!isEditing}
+                                       placeholder="Endereço"
+                                       value={endereco}
+                                       onChange={(event) => setEndereco(event.target.value)}
+                                       bg={"yellow.100"}
+                                       _disabled={{bg: "white"}}/>
                             </FormControl>
 
                             <FormControl isRequired={true}>
                                 <FormLabel>Número</FormLabel>
-                                <Input
-                                    placeholder="00"
-                                    value={numero_endereco}
-                                    onChange={(event) => setNumero_endereco(parseInt(event.target.value))}/>
+                                <Input disabled={!isEditing}
+                                       placeholder="00"
+                                       value={numero_endereco}
+                                       onChange={(event) => setNumero_endereco(parseInt(event.target.value))}
+                                       bg={"yellow.100"}
+                                       _disabled={{bg: "white"}}/>
                             </FormControl>
                         </ModalBody>
 
                         <ModalFooter>
-                            <ButtonGroup spacing={3}>
+                            <ButtonGroup spacing={3} display={"flex"} alignItems={"center"}>
+                                <Switch
+                                    onChange={() => setIsEditing(!isEditing)}
+                                    isChecked={isEditing}>
+                                    Editar</Switch>
                                 <Button
                                     onClick={closeHandler}
                                     colorScheme="red"
@@ -199,6 +228,7 @@ export const ClientCard = ({isOpen, onClose, initialRef, client, setClient}: Cli
                                     Cancelar
                                 </Button>
                                 <Button
+                                    isDisabled={!isEditing}
                                     colorScheme="blue"
                                     type="submit"
                                     isLoading={isLoading}>
@@ -211,5 +241,4 @@ export const ClientCard = ({isOpen, onClose, initialRef, client, setClient}: Cli
             </ModalOverlay>
         </Modal>
     );
-
 }

@@ -1,6 +1,6 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {Box, Center, CircularProgress, Divider, Flex, Icon, Input, InputGroup, InputLeftElement, Text, useDisclosure, VStack} from '@chakra-ui/react';
-import {SearchIcon} from '@chakra-ui/icons';
+import {Box, Center, CircularProgress, Divider, Flex, Icon, IconButton, Input, InputGroup, InputLeftElement, Text, useDisclosure, VStack} from '@chakra-ui/react';
+import {AddIcon, SearchIcon} from '@chakra-ui/icons';
 import {Database} from '@/lib/database.types';
 import {supabase} from '@/lib/supabase';
 import {ClientCard} from '@/components/ClientCard';
@@ -43,10 +43,29 @@ function ClientPage() {
         onOpen();
     }
 
+    const addClientHandler = () => {
+        setSelectedClient(null);
+        onOpen();
+    }
+
     const filteredClients = clients.filter((client) => {
         const regex = new RegExp(searchTerm, 'i');
         return regex.test(client.nome) || regex.test(client.sobrenome) || client.apelido?.match(regex);
     });
+
+    const AddClientButton = () => {
+        return (
+            <IconButton aria-label="Add client"
+                        icon={<AddIcon/>}
+                        isRound={true}
+                        position="fixed"
+                        bottom="6"
+                        right="6"
+                        size="lg"
+                        colorScheme="pink"
+                        onClick={addClientHandler}/>
+        )
+    }
 
     if (isLoading) {
         return (
@@ -79,6 +98,7 @@ function ClientPage() {
                 ))}
             </VStack>
             <ClientCard isOpen={isOpen} onClose={onClose} initialRef={initialRef} client={selectedClient} setClient={setSelectedClient}></ClientCard>
+            <AddClientButton/>
         </VStack>
     );
 }
