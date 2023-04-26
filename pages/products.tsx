@@ -1,15 +1,19 @@
-import {Divider, HStack, Icon, Input, InputGroup, InputLeftElement, Select, Table, TableContainer, Tbody, Td, Th, Thead, Tr, VStack} from "@chakra-ui/react";
-import {SearchIcon} from "@chakra-ui/icons";
-import {useState} from "react";
+import {Divider, HStack, Icon, Input, InputGroup, InputLeftElement, Select, Table, TableContainer, Tbody, Td, Th, Thead, Tr, useDisclosure, VStack} from "@chakra-ui/react";
+import {AddIcon, SearchIcon} from "@chakra-ui/icons";
+import {useRef, useState} from "react";
 import {Database} from "@/lib/database.types";
+import {AddButton} from "@/components/AddButton";
+import {ProductCard} from "@/components/ProductCard";
 
 type Product = Database['public']['Tables']['produtos']['Row'];
 
 export default function ProductsPage() {
+    const initialRef = useRef<HTMLInputElement>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [size, setSize] = useState('');
     const [gender, setGender] = useState('');
     const [brand, setBrand] = useState('');
+    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [products, setProducts] = useState<Product[]>([
         {
             categoria: "Camisetas",
@@ -57,6 +61,8 @@ export default function ProductsPage() {
             marca: "Nike"
         }
     ]);
+
+    const {isOpen, onOpen, onClose} = useDisclosure();
     const uniqueBrands = () => {
         return products.reduce((brands: string[], product) => {
             if (!brands.includes(product.marca)) {
@@ -70,6 +76,11 @@ export default function ProductsPage() {
         const regex = new RegExp(searchTerm, 'i');
         return (regex.test(produto.descricao) || regex.test(produto.codigo_barras)) && (size === '' || size === produto.tamanho) && (gender === '' || gender === produto.genero.toUpperCase()) && (brand === '' || brand === produto.marca);
     });
+
+    const addProductHandler = () => {
+        setSelectedProduct(null);
+        onOpen();
+    }
 
     return (
         <VStack>
@@ -131,6 +142,8 @@ export default function ProductsPage() {
                     </Tbody>
                 </Table>
             </TableContainer>
+            <ProductCard isOpen={isOpen} onClose={onClose} product={selectedProduct} setProduct={setSelectedProduct} initialRef={initialRef}/>
+            <AddButton label={"Adicionar produto"} icon={<AddIcon/>} handler={addProductHandler}/>
         </VStack>
     )
 }

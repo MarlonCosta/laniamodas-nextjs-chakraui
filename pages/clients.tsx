@@ -4,6 +4,7 @@ import {AddIcon, SearchIcon} from '@chakra-ui/icons';
 import {Database} from '@/lib/database.types';
 import {supabase} from '@/lib/supabase';
 import {ClientCard} from '@/components/ClientCard';
+import {AddButton} from "@/components/AddButton";
 
 
 type Client = Database['public']['Tables']['clientes']['Row'];
@@ -53,20 +54,6 @@ function ClientPage() {
         return regex.test(client.nome) || regex.test(client.sobrenome) || client.apelido?.match(regex);
     });
 
-    const AddClientButton = () => {
-        return (
-            <IconButton aria-label="Add client"
-                        icon={<AddIcon/>}
-                        isRound={true}
-                        position="fixed"
-                        bottom="6"
-                        right="6"
-                        size="lg"
-                        colorScheme="pink"
-                        onClick={addClientHandler}/>
-        )
-    }
-
     if (isLoading) {
         return (
             <Center verticalAlign="center" h="100vh">
@@ -98,7 +85,7 @@ function ClientPage() {
                 ))}
             </VStack>
             <ClientCard isOpen={isOpen} onClose={onClose} initialRef={initialRef} client={selectedClient} setClient={setSelectedClient}></ClientCard>
-            <AddClientButton/>
+            <AddButton label="Adicionar cliente" icon={<AddIcon/>} handler={addClientHandler}/>
         </VStack>
     );
 }

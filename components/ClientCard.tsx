@@ -103,7 +103,6 @@ export const ClientCard = ({isOpen, onClose, initialRef, client, setClient}: Cli
         setInstagram("");
         setEndereco("");
         setNumero_endereco(-1);
-        // setIsEditing(false);
         setClient(null);
         setIsEditing(false);
         window.location.reload();
