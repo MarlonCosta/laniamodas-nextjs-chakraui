@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {Box, Center, CircularProgress, Divider, Flex, Icon, IconButton, Input, InputGroup, InputLeftElement, Text, useDisclosure, VStack} from '@chakra-ui/react';
+import {Box, Center, CircularProgress, Divider, Flex, Icon, Input, InputGroup, InputLeftElement, Text, useDisclosure, VStack} from '@chakra-ui/react';
 import {AddIcon, SearchIcon} from '@chakra-ui/icons';
 import {Database} from '@/lib/database.types';
 import {supabase} from '@/lib/supabase';
@@ -21,13 +21,9 @@ function ClientPage() {
     const fetchClients = async () => {
         setIsLoading(true);
         try {
-            let {data: clients, error} = await supabase
+            let {data: clients } = await supabase
                 .from('clientes')
-                .select('*')
-            if (error) {
-                console.error(error);
-                return;
-            }
+                .select('*');
             setClients(clients as Client[]);
             setIsLoading(false);
         } catch (err) {

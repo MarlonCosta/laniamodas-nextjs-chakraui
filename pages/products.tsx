@@ -1,9 +1,10 @@
-import {Divider, HStack, Icon, Input, InputGroup, InputLeftElement, Select, Table, TableContainer, Tbody, Td, Th, Thead, Tr, useDisclosure, VStack} from "@chakra-ui/react";
+import {Center, CircularProgress, Divider, HStack, Icon, Input, InputGroup, InputLeftElement, Select, Table, TableContainer, Tbody, Td, Th, Thead, Tr, useDisclosure, VStack} from "@chakra-ui/react";
 import {AddIcon, SearchIcon} from "@chakra-ui/icons";
-import {useRef, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {Database} from "@/lib/database.types";
 import {AddButton} from "@/components/AddButton";
 import {ProductCard} from "@/components/ProductCard";
+import {supabase} from "@/lib/supabase";
 
 type Product = Database['public']['Tables']['produtos']['Row'];
 
@@ -11,58 +12,15 @@ export default function ProductsPage() {
     const initialRef = useRef<HTMLInputElement>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [size, setSize] = useState('');
+    const [color, setColor] = useState('');
     const [gender, setGender] = useState('');
     const [brand, setBrand] = useState('');
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-    const [products, setProducts] = useState<Product[]>([
-        {
-            categoria: "Camisetas",
-            codigo: "12345",
-            codigo_barras: "7890123456789",
-            cor: "Azul",
-            data_cadastro: "2022-01-01",
-            descricao: "Camiseta Azul Masculina",
-            estoque: 10,
-            genero: "Masculino",
-            id: 1,
-            preco_custo: 20,
-            preco_venda: 40,
-            tamanho: "M",
-            marca: "Nike"
-        },
-        {
-            categoria: "Calças",
-            codigo: "67890",
-            codigo_barras: "1234567890123",
-            cor: "Preto",
-            data_cadastro: "2022-01-02",
-            descricao: "Calça Preta Feminina",
-            estoque: 5,
-            genero: "Feminino",
-            id: 2,
-            preco_custo: 30,
-            preco_venda: 60,
-            tamanho: "P",
-            marca: "Adidas"
-        },
-        {
-            categoria: "Sapatos",
-            codigo: "24680",
-            codigo_barras: "2345678901234",
-            cor: "Marrom",
-            data_cadastro: "2022-01-03",
-            descricao: "Sapato Marrom Masculino",
-            estoque: 8,
-            genero: "Masculino",
-            id: 3,
-            preco_custo: 50,
-            preco_venda: 100,
-            tamanho: "42",
-            marca: "Nike"
-        }
-    ]);
+    const [products, setProducts] = useState<Product[]>([]);
 
+    const [isLoading, setIsLoading] = useState(false);
     const {isOpen, onOpen, onClose} = useDisclosure();
+
     const uniqueBrands = () => {
         return products.reduce((brands: string[], product) => {
             if (!brands.includes(product.marca)) {
@@ -72,14 +30,44 @@ export default function ProductsPage() {
         }, []);
     }
 
+    const fetchProducts = async () => {
+        setIsLoading(true);
+        try {
+            let {data: products} = await supabase
+                .from('produtos')
+                .select('*');
+            setProducts(products as Product[])
+            setIsLoading(false);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    useEffect(() => {
+        fetchProducts().then(response => console.log(response));
+    }, []);
+
+
     const filteredProducts = products.filter((produto) => {
         const regex = new RegExp(searchTerm, 'i');
-        return (regex.test(produto.descricao) || regex.test(produto.codigo_barras)) && (size === '' || size === produto.tamanho) && (gender === '' || gender === produto.genero.toUpperCase()) && (brand === '' || brand === produto.marca);
+        return (regex.test(produto.descricao) || regex.test(produto.codigo_barras)) && (size === '' || size === produto.tamanho) && (gender === '' || gender === produto.genero.toUpperCase()) && (brand === '' || brand === produto.marca) && (color === '' || color === produto.cor);
     });
 
+    const openProductHandler = (product: Product) => {
+        setSelectedProduct(product);
+        onOpen();
+    }
     const addProductHandler = () => {
         setSelectedProduct(null);
         onOpen();
+    }
+
+    if (isLoading) {
+        return (
+            <Center verticalAlign="center" h="100vh">
+                <CircularProgress isIndeterminate color="pink.400"/>
+            </Center>
+        )
     }
 
     return (
@@ -92,22 +80,31 @@ export default function ProductsPage() {
                     <Input type="text" placeholder="Busca produtos por nome ou código de barras" value={searchTerm}
                            onChange={(event) => setSearchTerm(event.target.value)} focusBorderColor="pink.400"/>
                 </InputGroup>
-                <Select placeholder="Tamanho" value={size} onChange={(event) => setSize(event.target.value)} focusBorderColor="pink.400" maxWidth="200px">
-                    <option value="PP">PP</option>
-                    <option value="P">P</option>
-                    <option value="M">M</option>
-                    <option value="G">G</option>
-                    <option value="GG">GG</option>
+                <Input placeholder="Tamanho" value={size} onChange={(event) => setSize(event.target.value)} focusBorderColor="pink.400" maxWidth="100px"/>
+                <Select placeholder="Cor" focusBorderColor="pink.400" maxWidth="100px" value={color} onChange={(event) => setColor(event.target.value)}>
+                    <option value="Branco">Branco</option>
+                    <option value="Preto">Preto</option>
+                    <option value="Vermelho">Vermelho</option>
+                    <option value="Azul">Azul</option>
+                    <option value="Verde">Verde</option>
+                    <option value="Amarelo">Amarelo</option>
+                    <option value="Rosa">Rosa</option>
+                    <option value="Laranja">Laranja</option>
+                    <option value="Roxo">Roxo</option>
+                    <option value="Marrom">Marrom</option>
+                    <option value="Cinza">Cinza</option>
+                    <option value="Bege">Bege</option>
+                    <option value="Outra">Outra</option>
                 </Select>
-
-                <Select placeholder="Gênero" value={gender} onChange={(event) => setGender(event.target.value)} focusBorderColor="pink.400" maxWidth="200px">
+                <Select placeholder="Gênero" value={gender} onChange={(event) => setGender(event.target.value)} focusBorderColor="pink.400" maxWidth="100px">
                     <option value="MASCULINO">Masculino</option>
                     <option value="FEMININO">Feminino</option>
+                    <option value="UNISSEX">Unissex</option>
                 </Select>
 
-                <Select placeholder="Marca" value={brand} onChange={(event) => setBrand(event.target.value)} focusBorderColor="pink.400" maxWidth="200px">
-                    {uniqueBrands().map((brand) => (
-                        <option key={brand} value={brand}>{brand}</option>
+                <Select placeholder="Marca" value={brand} onChange={(event) => setBrand(event.target.value)} focusBorderColor="pink.400" maxWidth="100px">
+                    {uniqueBrands().map((marca) => (
+                        <option key={marca} value={marca}>{marca}</option>
                     ))}
                 </Select>
             </HStack>
@@ -128,7 +125,7 @@ export default function ProductsPage() {
                     </Thead>
                     <Tbody>
                         {filteredProducts.map((produto) => (
-                            <Tr key={produto.id}>
+                            <Tr key={produto.id} onClick={() => openProductHandler(produto)}>
                                 <Td>{produto.descricao}</Td>
                                 <Td>{produto.codigo_barras}</Td>
                                 <Td>R$ {produto.preco_venda.toFixed(2)}</Td>
