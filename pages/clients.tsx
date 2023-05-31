@@ -18,10 +18,10 @@ function ClientPage() {
 
     const {isOpen, onOpen, onClose} = useDisclosure();
 
-    const fetchClients = async () => {
+    const getClients = async () => {
         setIsLoading(true);
         try {
-            let {data: clients } = await supabase
+            let {data: clients} = await supabase
                 .from('clientes')
                 .select('*');
             setClients(clients as Client[]);
@@ -32,7 +32,7 @@ function ClientPage() {
     }
 
     useEffect(() => {
-        fetchClients().then(response => console.log(response));
+        getClients().then(response => console.log(response));
     }, []);
 
     const openClientHandler = (client: Client) => {

@@ -28,7 +28,7 @@ const theme = extendTheme({
                     tr: {
                         bg: "white",
                         _hover: {
-                            bg: "gray.400",
+                            bg: "pink.600",
                             color: "white"
                         }
                     }
