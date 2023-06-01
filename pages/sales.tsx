@@ -5,6 +5,7 @@ import CustomTable from "@/components/CustomTable";
 import {SearchIcon} from "@chakra-ui/icons";
 import {supabase} from "@/lib/supabase";
 import {Column} from "react-table";
+import SaleCard from "@/components/SaleCard";
 
 type Sale = Database['public']['Tables']['vendas']['Row'];
 
@@ -52,16 +53,19 @@ export default function SalesPage() {
     }
 
     return (
-        <VStack>
-            <HStack w={"100%"}>
-                <InputGroup>
-                    <InputLeftElement pointerEvents={"none"}>
-                        <SearchIcon color={"gray.300"}/>
-                    </InputLeftElement>
-                    <Input type="text" placeholder="Buscar por nome do cliente"/>
-                </InputGroup>
-            </HStack>
-            <CustomTable columns={headers as Column[]} data={data} onClickHandler={onSaleClick}/>
-        </VStack>
+        // <VStack>
+        //     <HStack w={"100%"}>
+        //         <InputGroup>
+        //             <InputLeftElement pointerEvents={"none"}>
+        //                 <SearchIcon color={"gray.300"}/>
+        //             </InputLeftElement>
+        //             <Input type="text" placeholder="Buscar por nome do cliente"/>
+        //         </InputGroup>
+        //     </HStack>
+        //     <CustomTable columns={headers as Column[]} data={data} onClickHandler={onSaleClick}/>
+        // </VStack>
+        <SaleCard isOpen={true} onClose={() => {
+        }}/>
+
     )
 }
