@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Box, Select, Button } from "@chakra-ui/react";
+import { Box, Select, Button, Table, Thead, Tr, Th, Tbody, Modal, Td, Input, IconButton } from "@chakra-ui/react";
 
 import {
     Step,
@@ -14,6 +14,9 @@ import {
     useSteps,
 } from '@chakra-ui/stepper'
 import { Database } from "@/lib/database.types";
+import ProductsPage from "./products";
+import ProductModal from "@/components/ProductSelectionCard";
+import { FaCartPlus, FaShoppingBag, FaShoppingBasket, FaShoppingCart } from "react-icons/fa";
 
 type Client = Database['public']['Tables']['clientes']['Row'];
 type SoldProduct = Database['public']['Tables']['produtos_vendidos']['Row'];
@@ -25,7 +28,28 @@ const steps = [
 ]
 
 var cart: SoldProduct[] = [
-]
+    {
+        data_hora: "2022-01-01 10:00:00",
+        id: 1,
+        produto: 123,
+        quantidade: 5,
+        venda: 456
+    },
+    {
+        data_hora: "2022-01-02 15:30:00",
+        id: 2,
+        produto: null,
+        quantidade: null,
+        venda: null
+    },
+    {
+        data_hora: "2022-01-03 08:45:00",
+        id: 3,
+        produto: 789,
+        quantidade: 2,
+        venda: 987
+    }
+];
 
 const clients: Client[] = [
     {
@@ -72,10 +96,9 @@ const clients: Client[] = [
     }
 ];
 
-
-
-
 function NewSalePage() {
+
+    const [isOpen, setIsOpen] = useState(false);
     const [selectedClient, setSelectedClient] = useState<Client | null>(null);
     const { activeStep, setActiveStep } = useSteps({
         index: 1,
@@ -93,25 +116,75 @@ function NewSalePage() {
         setActiveStep(1);
     }, [selectedClient, setActiveStep]);
 
-    const [cart, setCart] = useState<Product[]>([]);
+    const [cart, setCart] = useState<SoldProduct[]>([
+        {
+            data_hora: "2022-01-01 10:00:00",
+            id: 1,
+            produto: 1,
+            quantidade: 5,
+            venda: 1
+        }        
+    ]);
+
+    function handleRemoveProduct(productId: number) {
+        const updatedCart = cart.filter((product) => product.id !== productId);
+        setCart(updatedCart);
+    }
+
+    const handleOpenModal = () => {
+        setIsOpen(true);
+    }
+
+    const handleCloseModal = () => {
+        setIsOpen(false);
+    }
+
 
     function SelectProduct() {
         return (
-            <Select
-                placeholder="Escolha um produto"
-                onChange={(event) => {
-                    const selectedProduct = products.find(product => product.name === event.target.value);
-                    if (selectedProduct) {
-                        setCart([...cart, selectedProduct]);
-                    }
-                }}
-            >
-                {products.map((product) => (
-                    <option key={product.id} value={product.name}>
-                        {product.name}
-                    </option>
-                ))}
-            </Select>
+            <Box>
+                <AddToCartButton />
+                <Table>
+                    <Thead>
+                        <Tr>
+                            <Th style={{ textAlign: 'center' }}>Produto</Th>
+                            <Th style={{ textAlign: 'center' }}>Quantidade</Th>
+                            <Th style={{ textAlign: 'center' }}>Total</Th>
+                            <Th style={{ textAlign: 'center' }}>Remover</Th>
+                        </Tr>
+                    </Thead>
+                    <Tbody>
+                        {
+                            cart.map((product: SoldProduct) => (
+                                <Tr key={product.id}>
+                                    <Td style={{ width: '70%' }}>{products.find(p => parseInt(p.id) === product.produto)?.name}</Td>
+                                    <Td style={{ textAlign: 'center', width: '10%', padding: '0px'}}>
+                                        <Input type="text" style={{ width: '50%', height: '100%', textAlign: 'center'}} defaultValue="1" />
+                                    </Td>
+                                    <Td style={{ textAlign: 'center', width: '10%' }}>{products.find(p => parseInt(p.id) === product.produto)?.price}</Td>
+                                    <Td style={{ textAlign: 'center', width: '10%' }}>
+                                        <Button onClick={() => handleRemoveProduct(product.id)}>❌</Button>
+                                    </Td>
+                                </Tr>
+                            ))
+                        }
+                    </Tbody>
+                </Table>
+            </Box>
+        );
+    }
+
+    function AddToCartButton() {
+        return (
+            <>
+                <IconButton
+                    icon={<FaCartPlus />}
+                    aria-label="Add to Cart"
+                    marginBottom={'10px'}
+                    style={{ marginLeft: 'auto' }}
+                    onClick={handleOpenModal}
+                />
+            </>
         );
     }
 
@@ -152,19 +225,21 @@ function NewSalePage() {
                             }}
                         >
                             {clients.map((client) => (
-                                <option key={client.cpf} value={client.nome}>
-                                    {client.nome}
+                                <option key={client.id} value={client.nome}>
+                                    {`${client.nome} (${client.apelido})`}
                                 </option>
                             ))}
                         </Select>}
                         {index === 1 && <SelectProduct />}
-                        
+
                         {index === 0 && <Button onClick={handleNextStep} isDisabled={selectedClient === null || activeStep !== 1} style={{ marginTop: '10px' }}>Confirmar</Button>}
                     </Box>
                     <StepSeparator />
                 </Step>
             ))}
+            <ProductModal isOpen={isOpen} onClose={handleCloseModal}/>
         </Stepper>
+        
     )
 }
 

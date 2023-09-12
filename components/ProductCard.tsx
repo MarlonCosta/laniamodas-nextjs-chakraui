@@ -182,7 +182,7 @@ export const ProductCard = ({isOpen, onClose, initialRef, product, setProduct}: 
                                         <FormLabel>Marca</FormLabel>
                                         <Input disabled={!isEditing}
                                                placeholder="Marca"
-                                               value={marca}
+                                               value={marca!}
                                                onChange={(event) => setMarca(event.target.value)}
                                                bg={"yellow.100"}
                                                _disabled={{bg: "white", caretColor: "black"}}

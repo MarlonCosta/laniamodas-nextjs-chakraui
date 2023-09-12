@@ -1,12 +1,10 @@
-import {Center, CircularProgress, Divider, HStack, Icon, Input, InputGroup, InputLeftElement, Select, useDisclosure, VStack} from "@chakra-ui/react";
+import {Center, CircularProgress, Divider, HStack, Icon, Input, InputGroup, InputLeftElement, Select, Table, TableContainer, Tbody, Td, Th, Thead, Tr, useDisclosure, VStack} from "@chakra-ui/react";
 import {AddIcon, SearchIcon} from "@chakra-ui/icons";
 import React, {useEffect, useRef, useState} from "react";
 import {Database} from "@/lib/database.types";
 import {AddButton} from "@/components/AddButton";
 import {ProductCard} from "@/components/ProductCard";
 import {supabase} from "@/lib/supabase";
-import CustomTable from "@/components/CustomTable";
-import {Column} from "react-table";
 
 type Product = Database['public']['Tables']['produtos']['Row'];
 
@@ -25,14 +23,14 @@ export default function ProductsPage() {
 
     const uniqueBrands = () => {
         return products.reduce((brands: string[], product) => {
-            if (!brands.includes(product.marca)) {
+            if (product.marca && !brands.includes(product.marca)) {
                 brands.push(product.marca);
             }
             return brands;
         }, []);
     }
 
-    const getProducts = async () => {
+    const fetchProducts = async () => {
         setIsLoading(true);
         try {
             let {data: products} = await supabase
@@ -46,7 +44,7 @@ export default function ProductsPage() {
     }
 
     useEffect(() => {
-        getProducts().then(response => console.log(response));
+        fetchProducts().then(response => console.log(response));
     }, []);
 
 
@@ -71,17 +69,6 @@ export default function ProductsPage() {
             </Center>
         )
     }
-
-    const headers = [
-        {accessor: 'descricao', Header: 'Descrição'},
-        {accessor: 'codigo_barras', Header: 'Código de Barras'},
-        {accessor: 'preco_venda', Header: 'Preço'},
-        {accessor: 'estoque', Header: 'Estoque'},
-        {accessor: 'cor', Header: 'Cor'},
-        {accessor: 'tamanho', Header: 'Tamanho'},
-        {accessor: 'marca', Header: 'Marca'},
-        {accessor: 'genero', Header: 'Gênero'},
-    ];
 
     return (
         <VStack>
@@ -122,7 +109,36 @@ export default function ProductsPage() {
                 </Select>
             </HStack>
             <Divider/>
-            <CustomTable columns={headers as Column[]} data={filteredProducts} onClickHandler={openProductHandler}/>
+            <TableContainer w={"100%"}>
+                <Table w={"100%"}>
+                    <Thead bg="pink.400">
+                        <Tr bg={"pink.400"} sx={{"&:hover": {background: "none", color: "inherit"}}}>
+                            <Th>Descrição</Th>
+                            <Th>Código de barras</Th>
+                            <Th>Preço</Th>
+                            <Th>Estoque</Th>
+                            <Th>Cor</Th>
+                            <Th>Tamanho</Th>
+                            <Th>Marca</Th>
+                            <Th>Gênero</Th>
+                        </Tr>
+                    </Thead>
+                    <Tbody>
+                        {filteredProducts.map((produto) => (
+                            <Tr key={produto.id} onClick={() => openProductHandler(produto)} style={{cursor: "pointer"}}>
+                                <Td>{produto.descricao}</Td>
+                                <Td>{produto.codigo_barras}</Td>
+                                <Td>R$ {produto.preco_venda.toFixed(2)}</Td>
+                                <Td>{produto.estoque}</Td>
+                                <Td>{produto.cor}</Td>
+                                <Td>{produto.tamanho}</Td>
+                                <Td>{produto.marca}</Td>
+                                <Td>{produto.genero}</Td>
+                            </Tr>
+                        ))}
+                    </Tbody>
+                </Table>
+            </TableContainer>
             <ProductCard isOpen={isOpen} onClose={onClose} product={selectedProduct} setProduct={setSelectedProduct} initialRef={initialRef}/>
             <AddButton label={"Adicionar produto"} icon={<AddIcon/>} handler={addProductHandler}/>
         </VStack>
