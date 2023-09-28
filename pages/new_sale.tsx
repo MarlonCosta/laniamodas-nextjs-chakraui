@@ -78,7 +78,7 @@ const clients: Client[] = [
 
 function NewSalePage() {
     const initialRef = useRef<HTMLInputElement>(null);
-    const {isOpen, onOpen, onClose} = useDisclosure();
+    const { isOpen, onOpen, onClose } = useDisclosure();
 
     const [selectedClient, setSelectedClient] = useState<Client | null>(null);
     const {activeStep, setActiveStep} = useSteps({
@@ -217,7 +217,7 @@ function NewSalePage() {
                                                 }).filter(p => p !== null) as SoldProduct[];
                                                 setCart(updatedCart);
                                             }}>-</Button>
-                                            <Input type="text" style={{height: 'inherit', textAlign: 'center'}} value={product.quantidade} readOnly/>
+                                            <Input type="text" style={{height: 'inherit', textAlign: 'center' }} value={product.quantidade} readOnly/>
                                             <Button onClick={() => {
                                                 const updatedCart = cart.map((p) => {
                                                     if (p.id_produto === product.id_produto) {
