@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Box, Select, Button, Table, Thead, Tr, Th, Tbody, Modal, Td, Input, IconButton } from "@chakra-ui/react";
-
+import React, {useEffect, useRef, useState} from "react";
+import {Box, Select, Button, Table, Thead, Tr, Th, Tbody, Td, Input, useDisclosure, ButtonGroup, Stack, Text} from "@chakra-ui/react";
 import {
     Step,
     StepDescription,
@@ -13,43 +12,24 @@ import {
     Stepper,
     useSteps,
 } from '@chakra-ui/stepper'
-import { Database } from "@/lib/database.types";
-import ProductsPage from "./products";
-import ProductModal from "@/components/ProductSelectionCard";
-import { FaCartPlus, FaShoppingBag, FaShoppingBasket, FaShoppingCart } from "react-icons/fa";
+import {Database} from "@/lib/database.types";
+import ProductsSelectionCard from "@/components/ProductSelectionCard";
+import {FaCartPlus} from "react-icons/fa";
+import PaymentStep from "@/components/PaymentStep";
 
 type Client = Database['public']['Tables']['clientes']['Row'];
-type SoldProduct = Database['public']['Tables']['produtos_vendidos']['Row'];
+type SoldProduct = Database['public']['Tables']['produtos_vendidos']['Insert'] & {
+    descricao: string;
+};
+type Product = Database['public']['Tables']['produtos']['Row'];
 
 const steps = [
-    { title: 'Cliente', description: 'Selecione um cliente' },
-    { title: 'Produtos', description: 'Selecione os produtos' },
-    { title: 'Pagamento', description: 'Selecione a forma de pagamento' },
+    {title: 'Etapa 1', description: 'Selecione um cliente'},
+    {title: 'Etapa 2', description: 'Selecione os produtos'},
+    {title: 'Etapa 3', description: 'Selecione a forma de pagamento'},
 ]
 
-var cart: SoldProduct[] = [
-    {
-        data_hora: "2022-01-01 10:00:00",
-        id: 1,
-        produto: 123,
-        quantidade: 5,
-        venda: 456
-    },
-    {
-        data_hora: "2022-01-02 15:30:00",
-        id: 2,
-        produto: null,
-        quantidade: null,
-        venda: null
-    },
-    {
-        data_hora: "2022-01-03 08:45:00",
-        id: 3,
-        produto: 789,
-        quantidade: 2,
-        venda: 987
-    }
-];
+let cart: SoldProduct[] = [];
 
 const clients: Client[] = [
     {
@@ -97,79 +77,173 @@ const clients: Client[] = [
 ];
 
 function NewSalePage() {
+    const initialRef = useRef<HTMLInputElement>(null);
+    const {isOpen, onOpen, onClose} = useDisclosure();
 
-    const [isOpen, setIsOpen] = useState(false);
     const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-    const { activeStep, setActiveStep } = useSteps({
+    const {activeStep, setActiveStep} = useSteps({
         index: 1,
         count: steps.length,
     })
 
-    type Product = { id: string, name: string, price: number };
     const products: Product[] = [
-        { id: '1', name: 'Product 1', price: 100 },
-        { id: '2', name: 'Product 2', price: 200 },
-        { id: '3', name: 'Product 3', price: 300 },
+        {
+            descricao: 'Product 1',
+            categoria: 'Category 1',
+            codigo_barras: '1234567890',
+            cor: 'Red',
+            data_cadastro: '2022-04-01',
+            estoque: 10,
+            genero: 'Male',
+            id: 1,
+            marca: 'Brand 1',
+            preco_custo: 50,
+            preco_venda: 100,
+            tamanho: 'M'
+        },
+        {
+            descricao: 'Product 2',
+            categoria: 'Category 2',
+            codigo_barras: '2345678901',
+            cor: 'Blue',
+            data_cadastro: '2022-04-02',
+            estoque: 20,
+            genero: 'Female',
+            id: 2,
+            marca: 'Brand 2',
+            preco_custo: 60,
+            preco_venda: 120,
+            tamanho: 'S'
+        },
+        {
+            descricao: 'Product 3',
+            categoria: 'Category 3',
+            codigo_barras: '3456789012',
+            cor: 'Green',
+            data_cadastro: '2022-04-03',
+            estoque: 30,
+            genero: 'Unisex',
+            id: 3,
+            marca: 'Brand 3',
+            preco_custo: 70,
+            preco_venda: 140,
+            tamanho: 'L'
+        }
     ];
 
     useEffect(() => {
-        setActiveStep(1);
+        setActiveStep(0);
     }, [selectedClient, setActiveStep]);
 
     const [cart, setCart] = useState<SoldProduct[]>([
         {
-            data_hora: "2022-01-01 10:00:00",
-            id: 1,
-            produto: 1,
+            id_produto: 1,
             quantidade: 5,
-            venda: 1
-        }        
+            id_venda: 1,
+            descricao: "teste"
+        }
     ]);
 
     function handleRemoveProduct(productId: number) {
-        const updatedCart = cart.filter((product) => product.id !== productId);
+        const updatedCart = cart.filter((product) => product.id_produto !== productId);
         setCart(updatedCart);
     }
 
-    const handleOpenModal = () => {
-        setIsOpen(true);
+    function handleAddToCart(product: Product) {
+        const newProduct: SoldProduct = {
+            id_produto: product.id,
+            quantidade: 1,
+            descricao: product.descricao
+        };
+        setCart([...cart, newProduct]);
+        onClose();
     }
 
-    const handleCloseModal = () => {
-        setIsOpen(false);
+    function SelectClient() {
+        return (
+            <>
+                <Select
+                    placeholder="Escolha um cliente"
+                    value={selectedClient?.nome || ''}
+                    onChange={(event) => {
+                        const selectedClient = clients.find(client => client.nome === event.target.value) as Client | null;
+                        setSelectedClient(selectedClient);
+                    }}
+                >
+                    {clients.map((client) => (
+                        <option key={client.id} value={client.nome}>
+                            {`${client.nome} (${client.apelido})`}
+                        </option>
+                    ))}
+                </Select>
+                <Box style={{textAlign: 'right'}}>
+                    <Button onClick={handleNextStep} isDisabled={selectedClient === null || activeStep !== 0} style={{marginTop: '10px'}}>Confirmar</Button>
+                </Box>
+            </>
+        )
     }
-
 
     function SelectProduct() {
         return (
             <Box>
-                <AddToCartButton />
+                <AddToCartButton/>
                 <Table>
                     <Thead>
                         <Tr>
-                            <Th style={{ textAlign: 'center' }}>Produto</Th>
-                            <Th style={{ textAlign: 'center' }}>Quantidade</Th>
-                            <Th style={{ textAlign: 'center' }}>Total</Th>
-                            <Th style={{ textAlign: 'center' }}>Remover</Th>
+                            <Th style={{textAlign: 'center'}}>Produto</Th>
+                            <Th style={{textAlign: 'center'}}>Quantidade</Th>
+                            <Th style={{textAlign: 'center'}}>Total</Th>
                         </Tr>
                     </Thead>
                     <Tbody>
                         {
                             cart.map((product: SoldProduct) => (
-                                <Tr key={product.id}>
-                                    <Td style={{ width: '70%' }}>{products.find(p => parseInt(p.id) === product.produto)?.name}</Td>
-                                    <Td style={{ textAlign: 'center', width: '10%', padding: '0px'}}>
-                                        <Input type="text" style={{ width: '50%', height: '100%', textAlign: 'center'}} defaultValue="1" />
+                                <Tr key={product.id_produto}>
+                                    <Td style={{width: '70%'}}>{products.find(p => p.id === product.id_produto)?.descricao}</Td>
+                                    <Td style={{textAlign: 'center', width: '10%', padding: '0px'}}>
+                                        <ButtonGroup size="sm">
+                                            <Button onClick={() => {
+                                                const updatedCart = cart.map((p) => {
+                                                    if (p.id_produto === product.id_produto) {
+                                                        if (p.quantidade === 1) {
+                                                            if (window.confirm('Deseja remover o produto do carrinho?')) {
+                                                                return null;
+                                                            }
+                                                        } else {
+                                                            return {...p, quantidade: p.quantidade! - 1};
+                                                        }
+                                                    }
+                                                    return p;
+                                                }).filter(p => p !== null) as SoldProduct[];
+                                                setCart(updatedCart);
+                                            }}>-</Button>
+                                            <Input type="text" style={{height: 'inherit', textAlign: 'center'}} value={product.quantidade} readOnly/>
+                                            <Button onClick={() => {
+                                                const updatedCart = cart.map((p) => {
+                                                    if (p.id_produto === product.id_produto) {
+                                                        return {...p, quantidade: p.quantidade! + 1};
+                                                    }
+                                                    return p;
+                                                });
+                                                setCart(updatedCart);
+                                            }}>+</Button>
+                                        </ButtonGroup>
                                     </Td>
-                                    <Td style={{ textAlign: 'center', width: '10%' }}>{products.find(p => parseInt(p.id) === product.produto)?.price}</Td>
-                                    <Td style={{ textAlign: 'center', width: '10%' }}>
-                                        <Button onClick={() => handleRemoveProduct(product.id)}>❌</Button>
-                                    </Td>
+                                    <Td style={{textAlign: 'center', width: '10%'}}>R${(products.find(p => p.id === product.id_produto)?.preco_venda! * product.quantidade).toFixed(2)}</Td>
                                 </Tr>
                             ))
                         }
                     </Tbody>
                 </Table>
+                <Box style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '10px'}}>
+                    <Text style={{color: 'black', fontWeight: 'bold'}}>Total: R${cart.reduce((total, product) => total + product.quantidade! * products.find(p => p.id === product.id_produto)?.preco_venda!, 0).toFixed(2)}</Text>
+                    <Button onClick={() => {
+                        if (window.confirm('Carrinho concluído?')) {
+                            handleNextStep();
+                        }
+                    }}>Confirmar</Button>
+                </Box>
+                <ProductsSelectionCard isOpen={isOpen} onClose={onClose} initialRef={initialRef} products={products}/>
             </Box>
         );
     }
@@ -177,20 +251,22 @@ function NewSalePage() {
     function AddToCartButton() {
         return (
             <>
-                <IconButton
-                    icon={<FaCartPlus />}
-                    aria-label="Add to Cart"
-                    marginBottom={'10px'}
-                    style={{ marginLeft: 'auto' }}
-                    onClick={handleOpenModal}
-                />
+                <Stack dir="row" spacing={4}>
+                    <Button
+                        leftIcon={<FaCartPlus/>}
+                        aria-label="Add to Cart"
+                        marginBottom={"10px"}
+                        style={{marginLeft: "auto"}}
+                        onClick={onOpen}>
+                        Adicionar produto
+                    </Button>
+                </Stack>
             </>
         );
     }
 
-
     function handleNextStep() {
-        if (activeStep === 1) {
+        if (activeStep === 0) {
             if (selectedClient) {
                 setActiveStep(activeStep + 1);
 
@@ -198,48 +274,38 @@ function NewSalePage() {
                 alert('Selecione um cliente');
             }
         }
-
+        if (activeStep === 1) {
+            if (cart.length > 0) {
+                setActiveStep(activeStep + 1);
+            } else {
+                alert('Adicione um produto');
+            }
+        }
     }
 
     return (
         <Stepper index={activeStep} orientation='vertical' height='400px' gap='0'>
             {steps.map((step, index) => (
-                <Step key={index} >
+                <Step key={index}>
                     <StepIndicator>
                         <StepStatus
-                            complete={<StepIcon />}
-                            incomplete={<StepNumber />}
-                            active={<StepNumber />}
+                            complete={<StepIcon/>}
+                            incomplete={<StepNumber/>}
+                            active={<StepNumber/>}
                         />
                     </StepIndicator>
 
                     <Box flexShrink='0'>
                         <StepTitle>{step.title}</StepTitle>
                         <StepDescription>{step.description}</StepDescription>
-                        {index === 0 && <Select
-                            placeholder="Escolha um cliente"
-                            value={selectedClient?.nome || ''}
-                            onChange={(event) => {
-                                const selectedClient = clients.find(client => client.nome === event.target.value) || null;
-                                setSelectedClient(selectedClient);
-                            }}
-                        >
-                            {clients.map((client) => (
-                                <option key={client.id} value={client.nome}>
-                                    {`${client.nome} (${client.apelido})`}
-                                </option>
-                            ))}
-                        </Select>}
-                        {index === 1 && <SelectProduct />}
-
-                        {index === 0 && <Button onClick={handleNextStep} isDisabled={selectedClient === null || activeStep !== 1} style={{ marginTop: '10px' }}>Confirmar</Button>}
+                        {index === 0 && <SelectClient/>}
+                        {index === 1 && <SelectProduct/>}
+                        {index === 2 && <PaymentStep/>}
                     </Box>
-                    <StepSeparator />
+                    <StepSeparator/>
                 </Step>
             ))}
-            <ProductModal isOpen={isOpen} onClose={handleCloseModal}/>
         </Stepper>
-        
     )
 }
 
