@@ -1,5 +1,5 @@
-import React, {useEffect, useRef, useState} from "react";
-import {Box, Select, Button, Table, Thead, Tr, Th, Tbody, Td, Input, useDisclosure, ButtonGroup, Stack, Text} from "@chakra-ui/react";
+import React, { useEffect, useRef, useState } from "react";
+import { Box, Select, Button, Table, Thead, Tr, Th, Tbody, Td, Input, useDisclosure, ButtonGroup, Stack, Text } from "@chakra-ui/react";
 import {
     Step,
     StepDescription,
@@ -12,24 +12,21 @@ import {
     Stepper,
     useSteps,
 } from '@chakra-ui/stepper'
-import {Database} from "@/lib/database.types";
+import { Database } from "@/lib/database.types";
 import ProductsSelectionCard from "@/components/ProductSelectionCard";
-import {FaCartPlus} from "react-icons/fa";
-import PaymentStep from "@/components/PaymentStep";
+import { FaCartPlus } from "react-icons/fa";
+import PaymentSelectionCard from "@/components/SelectPaymentMethod";
 
 type Client = Database['public']['Tables']['clientes']['Row'];
-type SoldProduct = Database['public']['Tables']['produtos_vendidos']['Insert'] & {
-    descricao: string;
-};
+type SoldProduct = Database['public']['Tables']['produtos_vendidos']['Insert'];
+type Sale = Database['public']['Tables']['vendas']['Insert'];
 type Product = Database['public']['Tables']['produtos']['Row'];
 
 const steps = [
-    {title: 'Etapa 1', description: 'Selecione um cliente'},
-    {title: 'Etapa 2', description: 'Selecione os produtos'},
-    {title: 'Etapa 3', description: 'Selecione a forma de pagamento'},
+    { title: 'Etapa 1', description: 'Selecione um cliente' },
+    { title: 'Etapa 2', description: 'Selecione os produtos' },
+    { title: 'Etapa 3', description: 'Selecione a forma de pagamento' },
 ]
-
-let cart: SoldProduct[] = [];
 
 const clients: Client[] = [
     {
@@ -79,12 +76,21 @@ const clients: Client[] = [
 function NewSalePage() {
     const initialRef = useRef<HTMLInputElement>(null);
     const { isOpen, onOpen, onClose } = useDisclosure();
-
     const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-    const {activeStep, setActiveStep} = useSteps({
+    const { activeStep, setActiveStep } = useSteps({
         index: 1,
         count: steps.length,
     })
+
+    const [sale, setSale] = useState<Sale>({
+        id_cliente: selectedClient?.id!,
+        data_hora: null,
+        total: 0,
+        desconto: 0,
+        forma_pagamento: "",
+        valor_pago: 0,
+        desconto_percentual: true
+    });
 
     const products: Product[] = [
         {
@@ -139,21 +145,19 @@ function NewSalePage() {
         {
             id_produto: 1,
             quantidade: 5,
-            id_venda: 1,
-            descricao: "teste"
+            id_venda: null
         }
     ]);
 
-    function handleRemoveProduct(productId: number) {
-        const updatedCart = cart.filter((product) => product.id_produto !== productId);
-        setCart(updatedCart);
-    }
-
     function handleAddToCart(product: Product) {
+        const productAlreadyInCart = cart.some((p) => p.id_produto === product.id);
+        if (productAlreadyInCart) {
+            alert('Este produto já está no carrinho!');
+            return;
+        }
         const newProduct: SoldProduct = {
             id_produto: product.id,
-            quantidade: 1,
-            descricao: product.descricao
+            quantidade: 1
         };
         setCart([...cart, newProduct]);
         onClose();
@@ -166,7 +170,7 @@ function NewSalePage() {
                     placeholder="Escolha um cliente"
                     value={selectedClient?.nome || ''}
                     onChange={(event) => {
-                        const selectedClient = clients.find(client => client.nome === event.target.value) as Client | null;
+                        const selectedClient: Client | null = clients.find(client => client.nome === event.target.value) ?? null;
                         setSelectedClient(selectedClient);
                     }}
                 >
@@ -176,52 +180,54 @@ function NewSalePage() {
                         </option>
                     ))}
                 </Select>
-                <Box style={{textAlign: 'right'}}>
-                    <Button onClick={handleNextStep} isDisabled={selectedClient === null || activeStep !== 0} style={{marginTop: '10px'}}>Confirmar</Button>
+                <Box style={{ textAlign: 'right' }}>
+                    <Button onClick={handleNextStep} isDisabled={selectedClient === null || activeStep !== 0} style={{ marginTop: '10px' }}>Confirmar</Button>
                 </Box>
             </>
         )
     }
 
+    function handleRemoveProduct(product: SoldProduct) {
+        const updatedCart = cart.map((p) => {
+            if (p.id_produto === product.id_produto) {
+                if (p.quantidade === 1) {
+                    if (window.confirm('Deseja remover o produto do carrinho?')) {
+                        return null;
+                    }
+                } else {
+                    return { ...p, quantidade: p.quantidade! - 1 };
+                }
+            }
+            return p;
+        }).filter(p => p !== null) as SoldProduct[];
+        setCart(updatedCart);
+    }
+
     function SelectProduct() {
         return (
             <Box>
-                <AddToCartButton/>
+                <AddToCartButton />
                 <Table>
                     <Thead>
                         <Tr>
-                            <Th style={{textAlign: 'center'}}>Produto</Th>
-                            <Th style={{textAlign: 'center'}}>Quantidade</Th>
-                            <Th style={{textAlign: 'center'}}>Total</Th>
+                            <Th style={{ textAlign: 'center', borderTopLeftRadius: '10px' }}>Produto</Th>
+                            <Th style={{ textAlign: 'center' }}>Quantidade</Th>
+                            <Th style={{ textAlign: 'center', borderTopRightRadius: '10px' }}>Total</Th>
                         </Tr>
                     </Thead>
                     <Tbody>
                         {
-                            cart.map((product: SoldProduct) => (
-                                <Tr key={product.id_produto}>
-                                    <Td style={{width: '70%'}}>{products.find(p => p.id === product.id_produto)?.descricao}</Td>
-                                    <Td style={{textAlign: 'center', width: '10%', padding: '0px'}}>
+                            cart.map((product: SoldProduct, index: number) => (
+                                <Tr key={product.id_produto} style={{ borderBottomLeftRadius: index === cart.length - 1 ? '10px' : '0px', borderBottomRightRadius: index === cart.length - 1 ? '10px' : '0px' }}>
+                                    <Td style={{ width: '70%' }}>{products.find(p => p.id === product.id_produto)?.descricao}</Td>
+                                    <Td style={{ textAlign: 'center', width: '10%', padding: '0px' }}>
                                         <ButtonGroup size="sm">
+                                            <Button onClick={() => handleRemoveProduct(product)}>-</Button>
+                                            <Input type="text" style={{ height: 'inherit', textAlign: 'center' }} value={product.quantidade} readOnly />
                                             <Button onClick={() => {
                                                 const updatedCart = cart.map((p) => {
                                                     if (p.id_produto === product.id_produto) {
-                                                        if (p.quantidade === 1) {
-                                                            if (window.confirm('Deseja remover o produto do carrinho?')) {
-                                                                return null;
-                                                            }
-                                                        } else {
-                                                            return {...p, quantidade: p.quantidade! - 1};
-                                                        }
-                                                    }
-                                                    return p;
-                                                }).filter(p => p !== null) as SoldProduct[];
-                                                setCart(updatedCart);
-                                            }}>-</Button>
-                                            <Input type="text" style={{height: 'inherit', textAlign: 'center' }} value={product.quantidade} readOnly/>
-                                            <Button onClick={() => {
-                                                const updatedCart = cart.map((p) => {
-                                                    if (p.id_produto === product.id_produto) {
-                                                        return {...p, quantidade: p.quantidade! + 1};
+                                                        return { ...p, quantidade: p.quantidade! + 1 };
                                                     }
                                                     return p;
                                                 });
@@ -229,34 +235,33 @@ function NewSalePage() {
                                             }}>+</Button>
                                         </ButtonGroup>
                                     </Td>
-                                    <Td style={{textAlign: 'center', width: '10%'}}>R${(products.find(p => p.id === product.id_produto)?.preco_venda! * product.quantidade).toFixed(2)}</Td>
+                                    <Td style={{ textAlign: 'center', width: '10%' }}>R${(products.find(p => p.id === product.id_produto)?.preco_venda! * product.quantidade).toFixed(2)}</Td>
                                 </Tr>
                             ))
                         }
                     </Tbody>
                 </Table>
-                <Box style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '10px'}}>
-                    <Text style={{color: 'black', fontWeight: 'bold'}}>Total: R${cart.reduce((total, product) => total + product.quantidade! * products.find(p => p.id === product.id_produto)?.preco_venda!, 0).toFixed(2)}</Text>
+                <Box style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '10px' }}>
+                    <Text style={{ color: 'black', fontWeight: 'bold' }}>Total: R${cart.reduce((total, product) => total + product.quantidade! * products.find(p => p.id === product.id_produto)?.preco_venda!, 0).toFixed(2)}</Text>
                     <Button onClick={() => {
-                        if (window.confirm('Carrinho concluído?')) {
-                            handleNextStep();
-                        }
-                    }}>Confirmar</Button>
+                        setActiveStep(2);
+                    }} isDisabled={cart.length === 0} style={{ marginTop: '10px' }}>Próximo</Button>
                 </Box>
-                <ProductsSelectionCard isOpen={isOpen} onClose={onClose} initialRef={initialRef} products={products}/>
+                <ProductsSelectionCard isOpen={isOpen} onClose={onClose} initialRef={initialRef} products={products} onClickHandler={handleAddToCart} />
             </Box>
         );
     }
+
 
     function AddToCartButton() {
         return (
             <>
                 <Stack dir="row" spacing={4}>
                     <Button
-                        leftIcon={<FaCartPlus/>}
+                        leftIcon={<FaCartPlus />}
                         aria-label="Add to Cart"
                         marginBottom={"10px"}
-                        style={{marginLeft: "auto"}}
+                        style={{ marginLeft: "auto" }}
                         onClick={onOpen}>
                         Adicionar produto
                     </Button>
@@ -289,20 +294,20 @@ function NewSalePage() {
                 <Step key={index}>
                     <StepIndicator>
                         <StepStatus
-                            complete={<StepIcon/>}
-                            incomplete={<StepNumber/>}
-                            active={<StepNumber/>}
+                            complete={<StepIcon />}
+                            incomplete={<StepNumber />}
+                            active={<StepNumber />}
                         />
                     </StepIndicator>
 
                     <Box flexShrink='0'>
                         <StepTitle>{step.title}</StepTitle>
                         <StepDescription>{step.description}</StepDescription>
-                        {index === 0 && <SelectClient/>}
-                        {index === 1 && <SelectProduct/>}
-                        {index === 2 && <PaymentStep/>}
+                        {index === 0 && <SelectClient />}
+                        {index === 1 && <SelectProduct />}
+                        {index === 2 && <PaymentSelectionCard sale={sale} setSale={setSale} cart={cart} products={products}/>}
                     </Box>
-                    <StepSeparator/>
+                    <StepSeparator />
                 </Step>
             ))}
         </Stepper>
