@@ -138,8 +138,8 @@ export const ProductCard = ({ isOpen, onClose, initialRef, product, setProduct }
             <ModalOverlay>
                 <ModalContent>
                     <form onSubmit={submitHandler}>
-                        <ModalHeader bg={"pink.400"} color={"white"}>{product ? `${product.descricao}` : "Cadastrar Produto"}</ModalHeader>
-                        <ModalCloseButton onClick={closeHandler} color={"white"} />
+                        <ModalHeader bg={"pink.500"} color={"white"}>{product ? `${product.descricao}` : "Cadastrar Produto"}</ModalHeader>
+                        <ModalCloseButton onClick={closeHandler} color={"white"}/>
                         <ModalBody pb={6}>
 
                             {errorMessage && (

@@ -133,7 +133,7 @@ export const ClientCard = ({isOpen, onClose, initialRef, client, setClient}: Cli
             <ModalOverlay>
                 <ModalContent>
                     <form onSubmit={submitHandler}>
-                        <ModalHeader bg={"pink.400"} color={"white"}>{client ? `${client.nome} ${client.sobrenome} ${client.apelido ? ` (${client.apelido})` : ""}` : "Criar cliente"}</ModalHeader>
+                        <ModalHeader bg={"pink.500"} color={"white"}>{client ? `${client.nome} ${client.sobrenome} ${client.apelido ? ` (${client.apelido})` : ""}` : "Criar cliente"}</ModalHeader>
                         <ModalCloseButton onClick={closeHandler} color={"white"}/>
                         <ModalBody pb={6}>
 
@@ -256,7 +256,7 @@ export const ClientCard = ({isOpen, onClose, initialRef, client, setClient}: Cli
                                         <Input disabled={!isEditing}
                                                type={"number"}
                                                placeholder="00"
-                                               value={numero_endereco}
+                                               value={numero_endereco?.toString()}
                                                onChange={(event) => setNumero_endereco(parseInt(event.target.value))}
                                                bg={"yellow.100"}
                                                _disabled={{bg: "white"}}/>

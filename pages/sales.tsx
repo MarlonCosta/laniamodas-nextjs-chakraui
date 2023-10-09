@@ -105,7 +105,7 @@ export default function SalesPage() {
                     </Tbody>
                 </Table>
             </TableContainer>
-            <SaleCard isOpen={isOpen} onClose={onClose} sale={selectedSale!!} setSale={setSelectedSale} initialRef={initialRef}/>
+            {/*<SaleCard isOpen={isOpen} onClose={onClose} sale={selectedSale!!} setSale={setSelectedSale} initialRef={initialRef}/>*/}
             <AddButton label={"Adicionar produto"} icon={<AddIcon/>} handler={addSaleHandler}/>
         </VStack>
     )

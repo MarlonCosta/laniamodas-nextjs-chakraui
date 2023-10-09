@@ -1,15 +1,18 @@
-import { Database } from "@/lib/database.types";
-import { supabase } from "@/lib/supabase";
-import { AddIcon, SearchIcon } from "@chakra-ui/icons";
-import { Center, CircularProgress, Divider, HStack, Icon, Input, InputGroup, InputLeftElement, Modal, ModalContent, ModalOverlay, Select, Table, TableContainer, Tbody, Td, Th, Thead, Tr, VStack, useDisclosure } from "@chakra-ui/react";
-import React, { useEffect, useRef, useState } from "react";
-import { ProductCard } from "./ProductCard";
-import { AddButton } from "./AddButton";
+import {Database} from "@/lib/database.types";
+import {SearchIcon} from "@chakra-ui/icons";
+import {Center, CircularProgress, Divider, HStack, Icon, Input, InputGroup, InputLeftElement, Modal, ModalContent, ModalOverlay, Select, Table, TableContainer, Tbody, Td, Th, Thead, Tr, VStack} from "@chakra-ui/react";
+import React, {useState} from "react";
 
 type Product = Database['public']['Tables']['produtos']['Row'];
 type Client = Database['public']['Tables']['clientes']['Row'];
 
-function ProductsSelectionCard({ isOpen, onClose, initialRef, products, onClickHandler}) {
+function ProductsSelectionCard({
+                                   isOpen,
+                                   onClose,
+                                   initialRef,
+                                   products,
+                                   onClickHandler
+                               }: { isOpen: boolean, onClose: () => void, initialRef: React.RefObject<HTMLInputElement>, products: Product[], onClickHandler: (product: Product) => void }) {
     const [searchTerm, setSearchTerm] = useState('');
     const [size, setSize] = useState('');
     const [color, setColor] = useState('');
@@ -35,15 +38,15 @@ function ProductsSelectionCard({ isOpen, onClose, initialRef, products, onClickH
     if (isLoading) {
         return (
             <Center verticalAlign="center" h="100vh">
-                <CircularProgress isIndeterminate color="pink.400" />
+                <CircularProgress isIndeterminate color="pink.500"/>
             </Center>
         )
     }
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} >
+        <Modal isOpen={isOpen} onClose={onClose}>
             <ModalOverlay>
-                <ModalContent p={5} h="80vh" w="80vw" maxW={"100vw"} >
+                <ModalContent p={5} h="80vh" w="80vw" maxW={"100vw"}>
                     <VStack>
                         <HStack w={"100%"}>
                             <InputGroup>
@@ -51,32 +54,32 @@ function ProductsSelectionCard({ isOpen, onClose, initialRef, products, onClickH
                                     <Icon as={SearchIcon} color={"gray.300"}/>
                                 </InputLeftElement>
                                 <Input type="text" placeholder="Busca produtos por nome ou código de barras" value={searchTerm}
-                                       onChange={(event) => setSearchTerm(event.target.value)} focusBorderColor="pink.400"/>
+                                       onChange={(event) => setSearchTerm(event.target.value)} focusBorderColor="pink.500"/>
                             </InputGroup>
-                            <Input placeholder="Tamanho" value={size} onChange={(event) => setSize(event.target.value)} focusBorderColor="pink.400" maxWidth="100px"/>
-                            <Select placeholder="Cor" focusBorderColor="pink.400" maxWidth="100px" value={color} onChange={(event) => setColor(event.target.value)}>
+                            <Input placeholder="Tamanho" value={size} onChange={(event) => setSize(event.target.value)} focusBorderColor="pink.500" maxWidth="100px"/>
+                            <Select placeholder="Cor" focusBorderColor="pink.500" maxWidth="100px" value={color} onChange={(event) => setColor(event.target.value)}>
                                 {["Branco",
-                                  "Preto",
-                                  "Vermelho",
-                                  "Azul",
-                                  "Verde",
-                                  "Amarelo",
-                                  "Rosa",
-                                  "Laranja",
-                                  "Roxo",
-                                  "Marrom",
-                                  "Cinza",
-                                  "Bege",
-                                  "Outra"].map((colorOption) => (
+                                    "Preto",
+                                    "Vermelho",
+                                    "Azul",
+                                    "Verde",
+                                    "Amarelo",
+                                    "Rosa",
+                                    "Laranja",
+                                    "Roxo",
+                                    "Marrom",
+                                    "Cinza",
+                                    "Bege",
+                                    "Outra"].map((colorOption) => (
                                     <option key={colorOption} value={colorOption}>{colorOption}</option>
                                 ))}
                             </Select>
-                            <Select placeholder="Gênero" value={gender} onChange={(event) => setGender(event.target.value)} focusBorderColor="pink.400" maxWidth="100px">
+                            <Select placeholder="Gênero" value={gender} onChange={(event) => setGender(event.target.value)} focusBorderColor="pink.500" maxWidth="100px">
                                 {["MASCULINO", "FEMININO", "UNISSEX"].map((genderOption) => (
                                     <option key={genderOption} value={genderOption}>{genderOption}</option>
                                 ))}
                             </Select>
-                            <Select placeholder="Marca" value={brand} onChange={(event) => setBrand(event.target.value)} focusBorderColor="pink.400" maxWidth="100px">
+                            <Select placeholder="Marca" value={brand} onChange={(event) => setBrand(event.target.value)} focusBorderColor="pink.500" maxWidth="100px">
                                 {uniqueBrands().map((marca: string) => (
                                     <option key={marca} value={marca}>{marca}</option>
                                 ))}
@@ -85,8 +88,8 @@ function ProductsSelectionCard({ isOpen, onClose, initialRef, products, onClickH
                         <Divider/>
                         <TableContainer w={"100%"}>
                             <Table w={"100%"}>
-                                <Thead bg="pink.400">
-                                    <Tr bg={"pink.400"} sx={{"&:hover": {background: "none", color: "inherit"}}}>
+                                <Thead bg="pink">
+                                    <Tr bg={"pink"} sx={{"&:hover": {background: "none", color: "inherit"}}}>
                                         {["Descrição", "Preço", "Estoque", "Cor", "Tamanho", "Marca", "Gênero"].map((header) => (
                                             <Th key={header}>{header}</Th>
                                         ))}

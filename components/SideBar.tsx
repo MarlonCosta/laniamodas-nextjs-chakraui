@@ -109,7 +109,7 @@ const NavItem = ({ icon, children, page}: NavItemProps) => {
                 role="group"
                 cursor="pointer"
                 _hover={{
-                    bg: 'pink.400',
+                    bg: 'pink.500',
                     color: 'white',
                 }}>
                 {icon && (

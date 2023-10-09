@@ -1,5 +1,4 @@
 import {IconButton} from "@chakra-ui/react";
-import {AddIcon} from "@chakra-ui/icons";
 import React from "react";
 
 export function AddButton(props: { label: string, icon: any, handler: () => void }) {
