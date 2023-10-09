@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Box, Select, Button, Table, Thead, Tr, Th, Tbody, Td, Input, useDisclosure, ButtonGroup, Stack, Text } from "@chakra-ui/react";
+import React, {useEffect, useRef, useState} from "react";
+import {Box, Select, Button, Table, Thead, Tr, Th, Tbody, Td, Input, useDisclosure, ButtonGroup, Stack, Text, AlertIcon, Alert} from "@chakra-ui/react";
 import {
     Step,
     StepDescription,
@@ -33,7 +33,7 @@ const clients: Client[] = [
         apelido: 'John',
         cpf: '12345678901',
         endereco: '123 Main St',
-        id: '1',
+        id: 1,
         instagram: 'john123',
         nome: 'John Doe',
         numero_endereco: 123,
@@ -47,7 +47,7 @@ const clients: Client[] = [
         apelido: 'Jane',
         cpf: '23456789012',
         endereco: '456 Elm St',
-        id: '2',
+        id: 2,
         instagram: 'jane456',
         nome: 'Jane Smith',
         numero_endereco: 456,
@@ -61,7 +61,7 @@ const clients: Client[] = [
         apelido: 'Bob',
         cpf: '34567890123',
         endereco: '789 Pine St',
-        id: '3',
+        id: 3,
         instagram: 'bob789',
         nome: 'Bob Johnson',
         numero_endereco: 789,
@@ -181,7 +181,7 @@ function NewSalePage() {
                     ))}
                 </Select>
                 <Box style={{ textAlign: 'right' }}>
-                    <Button onClick={handleNextStep} isDisabled={selectedClient === null || activeStep !== 0} style={{ marginTop: '10px' }}>Confirmar</Button>
+                    <Button colorScheme="pink" onClick={handleNextStep} isDisabled={selectedClient === null || activeStep !== 0} style={{marginTop: '10px'}}>Confirmar</Button>
                 </Box>
             </>
         )
@@ -242,10 +242,10 @@ function NewSalePage() {
                     </Tbody>
                 </Table>
                 <Box style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '10px' }}>
-                    <Text style={{ color: 'black', fontWeight: 'bold' }}>Total: R${cart.reduce((total, product) => total + product.quantidade! * products.find(p => p.id === product.id_produto)?.preco_venda!, 0).toFixed(2)}</Text>
-                    <Button onClick={() => {
+                    <Text style={{color: 'black', fontWeight: 'bold'}}>Total: R${cart.reduce((total, product) => total + product.quantidade! * products.find(p => p.id === product.id_produto)?.preco_venda!, 0).toFixed(2)}</Text>
+                    <Button colorScheme={"pink"} onClick={() => {
                         setActiveStep(2);
-                    }} isDisabled={cart.length === 0} style={{ marginTop: '10px' }}>Próximo</Button>
+                    }} isDisabled={cart.length === 0} style={{marginTop: '10px'}}>Próximo</Button>
                 </Box>
                 <ProductsSelectionCard isOpen={isOpen} onClose={onClose} initialRef={initialRef} products={products} onClickHandler={handleAddToCart} />
             </Box>
@@ -258,7 +258,8 @@ function NewSalePage() {
             <>
                 <Stack dir="row" spacing={4}>
                     <Button
-                        leftIcon={<FaCartPlus />}
+                        colorScheme="pink"
+                        leftIcon={<FaCartPlus/>}
                         aria-label="Add to Cart"
                         marginBottom={"10px"}
                         style={{ marginLeft: "auto" }}
@@ -274,17 +275,29 @@ function NewSalePage() {
         if (activeStep === 0) {
             if (selectedClient) {
                 setActiveStep(activeStep + 1);
-
             } else {
-                alert('Selecione um cliente');
+                return (
+                    <Alert status="error">
+                        <AlertIcon/>
+                        Selecione um cliente
+                    </Alert>
+                );
             }
         }
         if (activeStep === 1) {
             if (cart.length > 0) {
                 setActiveStep(activeStep + 1);
             } else {
-                alert('Adicione um produto');
+                return (
+                    <Alert status="error">
+                        <AlertIcon/>
+                        Adicione um produto
+                    </Alert>
+                );
             }
+        }
+        if (activeStep === 2) {
+            setActiveStep(activeStep + 1);
         }
     }
 

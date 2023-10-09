@@ -25,7 +25,7 @@ const theme = extendTheme({
                 simple: {
                     th: {
                         color: "white",
-                        bg: "pink.400"
+                        bg: "pink.500"
                     },
                     tr: {
                         bg: "white",
