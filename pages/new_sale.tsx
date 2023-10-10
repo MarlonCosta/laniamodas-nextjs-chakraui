@@ -16,6 +16,7 @@ import { Database } from "@/lib/database.types";
 import ProductsSelectionCard from "@/components/ProductSelectionCard";
 import { FaCartPlus } from "react-icons/fa";
 import PaymentSelectionCard from "@/components/SelectPaymentMethod";
+import {supabase} from "@/lib/supabase";
 
 type Client = Database['public']['Tables']['clientes']['Row'];
 type SoldProduct = Database['public']['Tables']['produtos_vendidos']['Insert'];
@@ -77,13 +78,13 @@ function NewSalePage() {
     const initialRef = useRef<HTMLInputElement>(null);
     const { isOpen, onOpen, onClose } = useDisclosure();
     const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-    const { activeStep, setActiveStep } = useSteps({
+    const {activeStep, setActiveStep} = useSteps({
         index: 1,
         count: steps.length,
     })
-
+    const [cart, setCart] = useState<SoldProduct[]>([]);
     const [sale, setSale] = useState<Sale>({
-        id_cliente: selectedClient?.id!,
+        id_cliente: null,
         data_hora: null,
         total: 0,
         desconto: 0,
@@ -91,6 +92,10 @@ function NewSalePage() {
         valor_pago: 0,
         desconto_percentual: true
     });
+
+    useEffect(() => {
+        setActiveStep(0);
+    }, [selectedClient, setActiveStep]);
 
     const products: Product[] = [
         {
@@ -137,17 +142,24 @@ function NewSalePage() {
         }
     ];
 
-    useEffect(() => {
-        setActiveStep(0);
-    }, [selectedClient, setActiveStep]);
 
-    const [cart, setCart] = useState<SoldProduct[]>([
-        {
-            id_produto: 1,
-            quantidade: 5,
-            id_venda: null
-        }
-    ]);
+    function AddToCartButton() {
+        return (
+            <>
+                <Stack dir="row" spacing={4}>
+                    <Button
+                        colorScheme="pink"
+                        leftIcon={<FaCartPlus/>}
+                        aria-label="Add to Cart"
+                        marginBottom={"10px"}
+                        style={{marginLeft: "auto"}}
+                        onClick={onOpen}>
+                        Adicionar produto
+                    </Button>
+                </Stack>
+            </>
+        );
+    }
 
     function handleAddToCart(product: Product) {
         const productAlreadyInCart = cart.some((p) => p.id_produto === product.id);
@@ -161,6 +173,22 @@ function NewSalePage() {
         };
         setCart([...cart, newProduct]);
         onClose();
+    }
+
+    function handleRemoveFromCart(product: SoldProduct) {
+        const updatedCart = cart.map((p) => {
+            if (p.id_produto === product.id_produto) {
+                if (p.quantidade === 1) {
+                    if (window.confirm('Deseja remover o produto do carrinho?')) {
+                        return null;
+                    }
+                } else {
+                    return {...p, quantidade: p.quantidade! - 1};
+                }
+            }
+            return p;
+        }).filter(p => p !== null) as SoldProduct[];
+        setCart(updatedCart);
     }
 
     function SelectClient() {
@@ -180,32 +208,13 @@ function NewSalePage() {
                         </option>
                     ))}
                 </Select>
-                <Box style={{ textAlign: 'right' }}>
-                    <Button colorScheme="pink" onClick={handleNextStep} isDisabled={selectedClient === null || activeStep !== 0} style={{marginTop: '10px'}}>Confirmar</Button>
-                </Box>
             </>
         )
     }
 
-    function handleRemoveProduct(product: SoldProduct) {
-        const updatedCart = cart.map((p) => {
-            if (p.id_produto === product.id_produto) {
-                if (p.quantidade === 1) {
-                    if (window.confirm('Deseja remover o produto do carrinho?')) {
-                        return null;
-                    }
-                } else {
-                    return { ...p, quantidade: p.quantidade! - 1 };
-                }
-            }
-            return p;
-        }).filter(p => p !== null) as SoldProduct[];
-        setCart(updatedCart);
-    }
-
     function SelectProduct() {
         return (
-            <Box>
+            <>
                 <AddToCartButton />
                 <Table>
                     <Thead>
@@ -222,8 +231,8 @@ function NewSalePage() {
                                     <Td style={{ width: '70%' }}>{products.find(p => p.id === product.id_produto)?.descricao}</Td>
                                     <Td style={{ textAlign: 'center', width: '10%', padding: '0px' }}>
                                         <ButtonGroup size="sm">
-                                            <Button onClick={() => handleRemoveProduct(product)}>-</Button>
-                                            <Input type="text" style={{ height: 'inherit', textAlign: 'center' }} value={product.quantidade} readOnly />
+                                            <Button onClick={() => handleRemoveFromCart(product)}>-</Button>
+                                            <Input type="text" style={{height: 'inherit', textAlign: 'center'}} value={product.quantidade} readOnly/>
                                             <Button onClick={() => {
                                                 const updatedCart = cart.map((p) => {
                                                     if (p.id_produto === product.id_produto) {
@@ -241,63 +250,40 @@ function NewSalePage() {
                         }
                     </Tbody>
                 </Table>
-                <Box style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '10px' }}>
+                <Box style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '10px'}}>
                     <Text style={{color: 'black', fontWeight: 'bold'}}>Total: R${cart.reduce((total, product) => total + product.quantidade! * products.find(p => p.id === product.id_produto)?.preco_venda!, 0).toFixed(2)}</Text>
-                    <Button colorScheme={"pink"} onClick={() => {
-                        setActiveStep(2);
-                    }} isDisabled={cart.length === 0} style={{marginTop: '10px'}}>Próximo</Button>
                 </Box>
-                <ProductsSelectionCard isOpen={isOpen} onClose={onClose} initialRef={initialRef} products={products} onClickHandler={handleAddToCart} />
-            </Box>
-        );
-    }
-
-
-    function AddToCartButton() {
-        return (
-            <>
-                <Stack dir="row" spacing={4}>
-                    <Button
-                        colorScheme="pink"
-                        leftIcon={<FaCartPlus/>}
-                        aria-label="Add to Cart"
-                        marginBottom={"10px"}
-                        style={{ marginLeft: "auto" }}
-                        onClick={onOpen}>
-                        Adicionar produto
-                    </Button>
-                </Stack>
+                <ProductsSelectionCard isOpen={isOpen} onClose={onClose} initialRef={initialRef} products={products} onClickHandler={handleAddToCart}/>
             </>
         );
     }
 
-    function handleNextStep() {
-        if (activeStep === 0) {
-            if (selectedClient) {
-                setActiveStep(activeStep + 1);
-            } else {
-                return (
-                    <Alert status="error">
-                        <AlertIcon/>
-                        Selecione um cliente
-                    </Alert>
-                );
-            }
+    function validateSale() {
+        if (!selectedClient) {
+            return <Alert status="error"><AlertIcon/>Selecione um cliente</Alert>
         }
-        if (activeStep === 1) {
-            if (cart.length > 0) {
-                setActiveStep(activeStep + 1);
-            } else {
-                return (
-                    <Alert status="error">
-                        <AlertIcon/>
-                        Adicione um produto
-                    </Alert>
-                );
-            }
+        if (cart.length === 0) {
+            return <Alert status="error"><AlertIcon/>Selecione pelo menos um produto</Alert>
         }
-        if (activeStep === 2) {
-            setActiveStep(activeStep + 1);
+        return <Alert status="success"><AlertIcon/>Venda salva com sucesso</Alert>;
+    }
+
+    async function saveSaleToDatabase(sale: Sale): Promise<{ data: any, error: any }> {
+        const {data, error} = await supabase
+            .from('vendas')
+            .insert([
+                sale
+            ]);
+
+        return {data, error};
+    }
+
+    function saveResultAlert(data: any, error: any) {
+        if (error) {
+            return <Alert status="error"><AlertIcon/>Erro ao salvar venda</Alert>
+        }
+        if (data) {
+            return <Alert status="success"><AlertIcon/>Venda salva com sucesso</Alert>
         }
     }
 
@@ -307,9 +293,9 @@ function NewSalePage() {
                 <Step key={index}>
                     <StepIndicator>
                         <StepStatus
-                            complete={<StepIcon />}
-                            incomplete={<StepNumber />}
-                            active={<StepNumber />}
+                            complete={<StepIcon/>}
+                            incomplete={<StepNumber/>}
+                            active={<StepNumber/>}
                         />
                     </StepIndicator>
 
