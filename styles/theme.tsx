@@ -59,7 +59,15 @@ const theme = extendTheme({
                 borderColor: "pink.400",
               },
             },
-          },
+        },
+        Alert: {
+            baseStyle: {
+                container: {
+                    borderRadius: "10px",
+                    margin: "10px 0",
+                },
+            }
+        },
     },
 });
 
