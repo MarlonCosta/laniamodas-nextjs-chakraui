@@ -16,6 +16,7 @@ import { Database } from "@/lib/database.types";
 import ProductsSelectionCard from "@/components/ProductSelectionCard";
 import { FaCartPlus } from "react-icons/fa";
 import { supabase } from "@/lib/supabase";
+import { v4 as uuidv4 } from 'uuid';
 
 type Client = Database['public']['Tables']['clientes']['Row'];
 type SoldProduct = Database['public']['Tables']['produtos_vendidos']['Insert'];
@@ -42,7 +43,7 @@ const clients: Client[] = [
         apelido: 'John',
         cpf: '12345678901',
         endereco: '123 Main St',
-        id: 1,
+        id: uuidv4(),
         instagram: 'john123',
         nome: 'John Doe',
         numero_endereco: 123,
@@ -56,7 +57,7 @@ const clients: Client[] = [
         apelido: 'Jane',
         cpf: '23456789012',
         endereco: '456 Elm St',
-        id: 2,
+        id: uuidv4(),
         instagram: 'jane456',
         nome: 'Jane Smith',
         numero_endereco: 456,
@@ -70,7 +71,7 @@ const clients: Client[] = [
         apelido: 'Bob',
         cpf: '34567890123',
         endereco: '789 Pine St',
-        id: 3,
+        id: uuidv4(),
         instagram: 'bob789',
         nome: 'Bob Johnson',
         numero_endereco: 789,
@@ -86,6 +87,8 @@ function NewSalePage() {
     const initialRef = useRef<HTMLInputElement>(null);
     const { isOpen, onOpen, onClose } = useDisclosure();
     const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+    const [products, setProducts] = useState<Product[]>([]);
+    const [clients, setClients] = useState<Client[]>([]);
     const { activeStep, setActiveStep } = useSteps({
         index: 0,
         count: steps.length,
@@ -101,58 +104,41 @@ function NewSalePage() {
         desconto_percentual: true
     });
 
-    const products: Product[] = [
-        {
-            descricao: 'Product 1',
-            categoria: 'Category 1',
-            codigo_barras: '1234567890',
-            cor: 'Red',
-            data_cadastro: '2022-04-01',
-            estoque: 10,
-            genero: 'Male',
-            id: 1,
-            marca: 'Brand 1',
-            preco_custo: 50,
-            preco_venda: 100,
-            tamanho: 'M'
-        },
-        {
-            descricao: 'Product 2',
-            categoria: 'Category 2',
-            codigo_barras: '2345678901',
-            cor: 'Blue',
-            data_cadastro: '2022-04-02',
-            estoque: 20,
-            genero: 'Female',
-            id: 2,
-            marca: 'Brand 2',
-            preco_custo: 60,
-            preco_venda: 120,
-            tamanho: 'S'
-        },
-        {
-            descricao: 'Product 3',
-            categoria: 'Category 3',
-            codigo_barras: '3456789012',
-            cor: 'Green',
-            data_cadastro: '2022-04-03',
-            estoque: 30,
-            genero: 'Unisex',
-            id: 3,
-            marca: 'Brand 3',
-            preco_custo: 70,
-            preco_venda: 140,
-            tamanho: 'L'
-        }
-    ];
+    useEffect(() => {
+        Promise.all([fetchProducts(), fetchClients()]).then(([productsData, clientsData]) => {
+            if (productsData) {
+                setProducts(productsData);
+            }
+            if (clientsData) {
+                setClients(clientsData);
+            }
+        });
+    }, []);
 
-    const [cart, setCart] = useState<SoldProduct[]>([
-        {
-            id_produto: 1,
-            quantidade: 5,
-            id_venda: null
-        }
-    ]);
+
+    async function fetchProducts() {
+        const { data, error } = await supabase
+            .from("produtos")
+            .select("*");
+        if (error) {
+            console.error(error);
+        } else {
+            return data;
+        }  
+    }
+
+    async function fetchClients() {
+        const { data, error } = await supabase
+            .from("clientes")
+            .select("*");
+        if (error) {
+            console.error(error);
+        } else {
+            return data;
+        }  
+    } 
+
+    const [cart, setCart] = useState<SoldProduct[]>([]);
 
     const [messageAlert, setAlert] = useState<{ status: "error" | "info" | "warning" | "success", message: string } | null>(null);
 
@@ -198,6 +184,12 @@ function NewSalePage() {
         )
     }
 
+
+    useEffect(() => {
+        if (activeStep === 1) {
+            setActiveStep(cart.length !== 0 ? 2 : 1);
+        }
+    }, [activeStep, cart, setActiveStep]);
 
 
     function SelectProduct({ cart, products, handleAddToCart, isOpen, onClose, initialRef }: SelectProductProps) {
@@ -274,21 +266,21 @@ function NewSalePage() {
                         </Tr>
                     </Thead>
                     <Tbody>
-                        
-                        {cart.length === 0 ? 
+
+                        {cart.length === 0 ?
                             <Tr>
-                                <Td/>
-                                <Td colSpan={3} style={{ 
-                                    textAlign: 'center', 
-                                    height: '3em', 
-                                    display: 'flex', 
-                                    alignItems: 'center', 
+                                <Td />
+                                <Td colSpan={3} style={{
+                                    textAlign: 'center',
+                                    height: '3em',
+                                    display: 'flex',
+                                    alignItems: 'center',
                                     justifyContent: 'center',
-                                    border: 'none' 
+                                    border: 'none'
                                 }}>
                                     Carrinho vazio!
                                 </Td>
-                                <Td/>
+                                <Td />
                             </Tr> :
                             cart.map((product: SoldProduct, index: number) => (
                                 <Tr key={product.id_produto} style={{ borderBottomLeftRadius: index === cart.length - 1 ? '10px' : '0px', borderBottomRightRadius: index === cart.length - 1 ? '10px' : '0px' }}>
@@ -339,11 +331,13 @@ function NewSalePage() {
         );
     }
 
-    async function saveSaleOnDb(sale: Sale) {
-        const { error } = await supabase.from('vendas').insert(sale);
+    async function saveSaleOnDb(sale: Sale): Promise<Sale | null> {
+        const { data, error } = await supabase.from('vendas').insert(sale);
         if (error) {
             setAlert({ status: "error", message: error.message });
+            return null;
         }
+        return data;
     }
 
     async function addDebtToClient(client: Client, debt: number) {
@@ -384,20 +378,80 @@ function NewSalePage() {
             return paidValue >= 0 && (paidValue + calculateDiscount()) <= total;
         }
 
+        function validateSale(sale: Sale) {
+            if (!sale.id_cliente) {
+                alert("Id do cliente inválido: " + sale.id_cliente)
+                setAlert({ status: "error", message: "Selecione um cliente" });
+                return false;
+            }
+            if (cart.length === 0) {
+                alert("Carrinho vazio!")
+                setAlert({ status: "error", message: "Adicione produtos ao carrinho" });
+                return false;
+            }
+            if (paymentMethod === "") {
+                alert("Forma de pagamento inválida!")
+                setAlert({ status: "error", message: "Escolha uma forma de pagamento" });
+                return false;
+            }
+            if (!validatePaidValue(paidValue)) {
+                alert("Valor pago inválido!")
+                setAlert({ status: "error", message: "O valor pago + desconto deve ser menor ou igual ao valor total da compra" });
+                return false;
+            }
+            if (!validateDiscount(discount, percentualDiscount)) {
+                if (percentualDiscount) {
+                    setAlert({ status: "error", message: "O desconto percentual deve ser maior ou igual a 0 e menor ou igual a 30%" });
+                } else {
+                    setAlert({ status: "error", message: "O desconto real deve ser maior ou igual a 0 e menor ou igual ao valor da compra" });
+                }
+                return false;
+            }
+            return true;
+        }
+
         function buildSale() {
-            setSale({
+            const newSale = {
                 ...sale,
                 id_cliente: selectedClient!.id,
-                data_hora: new Date().toUTCString(),
+                data_hora: new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }),
                 desconto: discount,
                 desconto_percentual: percentualDiscount,
                 forma_pagamento: paymentMethod,
                 total: total,
                 valor_pago: paidValue
-            })
-
-            return sale;
+            };
+            setSale(newSale);
+            return newSale;
         }
+
+        async function finishSale(sale: Sale) {
+            if (!validateSale(sale)){
+                alert("Validação falhou mas vamo tentar")
+            }
+            else {
+                const savedSale = await saveSaleOnDb(sale);
+                if (savedSale) {
+                    cart.forEach(async (item) => {
+                        const { error } = await supabase
+                            .from('produtos_vendidos')
+                            .insert([
+                                {
+                                    id_venda: savedSale.id, 
+                                    id_produto: item.id_produto,
+                                    quantidade: item.quantidade
+                                }
+                            ]);
+                        if (error) {
+                            console.error('Error: ', error);
+                        }
+                    });
+                } else {
+                    console.error('Error: savedSale is null');
+                }
+            }
+        }
+
 
         return (
             <Box>
@@ -449,8 +503,8 @@ function NewSalePage() {
                         </InputGroup>
                         <InputGroup mr={2} flex="1" marginRight={"0px"}>
                             <InputLeftAddon bg={"pink.500"} color={"white"}>Desconto</InputLeftAddon>
-                            
-                            {/* TODO: Adicionar cálculo automático de desconto */} 
+
+                            {/* TODO: Adicionar cálculo automático de desconto */}
 
                             <Input type="number" placeholder="Desconto" value={discount} step="1" min="0" max="30" onChange={(e) => {
                                 setDiscount(parseFloat(e.target.value));
@@ -486,7 +540,7 @@ function NewSalePage() {
                         </StatGroup>
                     </Box>
                     <Box display="flex" justifyContent="flex-end">
-                        <Button colorScheme="pink" onClick={() => buildSale()} style={{ marginTop: "10px" }}>Concluir venda</Button>
+                        <Button colorScheme="pink" onClick={() => finishSale(buildSale())} style={{ marginTop: "10px" }}>Concluir venda</Button>
                     </Box>
                 </Box>
             </Box>
@@ -497,7 +551,7 @@ function NewSalePage() {
     return (
         <>
             {messageAlert && (
-                <Alert status={messageAlert.status  as "error" | "info" | "warning" | "success"}>
+                <Alert status={messageAlert.status as "error" | "info" | "warning" | "success"}>
                     <AlertIcon />
                     {messageAlert.message}
                 </Alert>
