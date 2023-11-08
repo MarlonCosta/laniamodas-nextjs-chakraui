@@ -1,22 +1,40 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Box, Select, Button, Table, Thead, Tr, Th, Tbody, Td, Input, useDisclosure, ButtonGroup, Stack, Text, AlertIcon, Alert, InputGroup, InputLeftAddon, InputRightAddon, Stat, StatGroup, StatLabel, StatNumber, AlertDialog, AlertDialogBody, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogOverlay } from "@chakra-ui/react";
+import React, {useEffect, useRef, useState} from "react";
 import {
-    Step,
-    StepDescription,
-    StepIcon,
-    StepIndicator,
-    StepNumber,
-    StepSeparator,
-    StepStatus,
-    StepTitle,
-    Stepper,
-    useSteps,
-} from '@chakra-ui/stepper'
-import { Database } from "@/lib/database.types";
+    Alert,
+    AlertDialog,
+    AlertDialogBody,
+    AlertDialogContent,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogOverlay,
+    AlertIcon,
+    Box,
+    Button,
+    ButtonGroup,
+    Input,
+    InputGroup,
+    InputLeftAddon,
+    InputRightAddon,
+    Select,
+    Stack,
+    Stat,
+    StatGroup,
+    StatLabel,
+    StatNumber,
+    Table,
+    Tbody,
+    Td,
+    Text,
+    Th,
+    Thead,
+    Tr,
+    useDisclosure
+} from "@chakra-ui/react";
+import {Step, StepDescription, StepIcon, StepIndicator, StepNumber, Stepper, StepSeparator, StepStatus, StepTitle, useSteps,} from '@chakra-ui/stepper'
+import {Database} from "@/lib/database.types";
 import ProductsSelectionCard from "@/components/ProductSelectionCard";
-import { FaCartPlus } from "react-icons/fa";
-import { supabase } from "@/lib/supabase";
-import { v4 as uuidv4 } from 'uuid';
+import {FaCartPlus} from "react-icons/fa";
+import {supabase} from "@/lib/supabase";
 
 type Client = Database['public']['Tables']['clientes']['Row'];
 type SoldProduct = Database['public']['Tables']['produtos_vendidos']['Insert'];
@@ -33,63 +51,19 @@ type SelectProductProps = {
 };
 
 const steps = [
-    { title: 'Etapa 1', description: 'Selecione um cliente' },
-    { title: 'Etapa 2', description: 'Selecione os produtos' },
-    { title: 'Etapa 3', description: 'Selecione a forma de pagamento' },
+    {title: 'Etapa 1', description: 'Selecione um cliente'},
+    {title: 'Etapa 2', description: 'Selecione os produtos'},
+    {title: 'Etapa 3', description: 'Selecione a forma de pagamento'},
 ]
 
-const clients: Client[] = [
-    {
-        apelido: 'John',
-        cpf: '12345678901',
-        endereco: '123 Main St',
-        id: uuidv4(),
-        instagram: 'john123',
-        nome: 'John Doe',
-        numero_endereco: 123,
-        saldo_devedor: 0,
-        sobrenome: 'Doe',
-        telefone: '1234567890',
-        ultima_compra: '2022-01-01',
-        ultimo_pagamento: '2022-01-01'
-    },
-    {
-        apelido: 'Jane',
-        cpf: '23456789012',
-        endereco: '456 Elm St',
-        id: uuidv4(),
-        instagram: 'jane456',
-        nome: 'Jane Smith',
-        numero_endereco: 456,
-        saldo_devedor: 0,
-        sobrenome: 'Smith',
-        telefone: '2345678901',
-        ultima_compra: '2022-02-01',
-        ultimo_pagamento: '2022-02-01'
-    },
-    {
-        apelido: 'Bob',
-        cpf: '34567890123',
-        endereco: '789 Pine St',
-        id: uuidv4(),
-        instagram: 'bob789',
-        nome: 'Bob Johnson',
-        numero_endereco: 789,
-        saldo_devedor: 0,
-        sobrenome: 'Johnson',
-        telefone: '3456789012',
-        ultima_compra: '2022-03-01',
-        ultimo_pagamento: '2022-03-01'
-    }
-];
 
 function NewSalePage() {
     const initialRef = useRef<HTMLInputElement>(null);
-    const { isOpen, onOpen, onClose } = useDisclosure();
+    const {isOpen, onOpen, onClose} = useDisclosure();
     const [selectedClient, setSelectedClient] = useState<Client | null>(null);
     const [products, setProducts] = useState<Product[]>([]);
     const [clients, setClients] = useState<Client[]>([]);
-    const { activeStep, setActiveStep } = useSteps({
+    const {activeStep, setActiveStep} = useSteps({
         index: 0,
         count: steps.length,
     })
@@ -117,26 +91,26 @@ function NewSalePage() {
 
 
     async function fetchProducts() {
-        const { data, error } = await supabase
+        const {data, error} = await supabase
             .from("produtos")
             .select("*");
         if (error) {
             console.error(error);
         } else {
             return data;
-        }  
+        }
     }
 
     async function fetchClients() {
-        const { data, error } = await supabase
+        const {data, error} = await supabase
             .from("clientes")
             .select("*");
         if (error) {
             console.error(error);
         } else {
             return data;
-        }  
-    } 
+        }
+    }
 
     const [cart, setCart] = useState<SoldProduct[]>([]);
 
@@ -145,7 +119,7 @@ function NewSalePage() {
     function handleAddToCart(product: Product) {
         const productAlreadyInCart = cart.some((p) => p.id_produto === product.id);
         if (productAlreadyInCart) {
-            setAlert({ status: "error", message: 'Este produto já está no carrinho!' });
+            setAlert({status: "error", message: 'Este produto já está no carrinho!'});
             return;
         }
         const newProduct: SoldProduct = {
@@ -161,7 +135,7 @@ function NewSalePage() {
             <Box>
                 {selectedClient ? null : (
                     <Alert status="error">
-                        <AlertIcon />
+                        <AlertIcon/>
                         {"Escolha um cliente"}
                     </Alert>
                 )}
@@ -192,8 +166,8 @@ function NewSalePage() {
     }, [activeStep, cart, setActiveStep]);
 
 
-    function SelectProduct({ cart, products, handleAddToCart, isOpen, onClose, initialRef }: SelectProductProps) {
-        const { isOpen: isRemoveDialogOpen, onOpen: onRemoveDialogOpen, onClose: onRemoveDialogClose } = useDisclosure();
+    function SelectProduct({cart, products, handleAddToCart, isOpen, onClose, initialRef}: SelectProductProps) {
+        const {isOpen: isRemoveDialogOpen, onOpen: onRemoveDialogOpen, onClose: onRemoveDialogClose} = useDisclosure();
         const [productToRemove, setProductToRemove] = useState<SoldProduct | null>(null);
 
         function handleRemoveProduct(product: SoldProduct) {
@@ -208,7 +182,7 @@ function NewSalePage() {
         function subtractProductFromCart(product: SoldProduct) {
             const updatedCart = cart.map((p) => {
                 if (p.id_produto === product.id_produto) {
-                    return { ...p, quantidade: p.quantidade! - 1 };
+                    return {...p, quantidade: p.quantidade! - 1};
                 }
                 return p;
             }) as SoldProduct[];
@@ -224,7 +198,7 @@ function NewSalePage() {
             <Box>
                 {cart.length !== 0 ? null : (
                     <Alert status="error" marginTop={4}>
-                        <AlertIcon />
+                        <AlertIcon/>
                         {"Adicione algum item ao carrinho"}
                     </Alert>
                 )}
@@ -256,20 +230,20 @@ function NewSalePage() {
                     </AlertDialogOverlay>
                 </AlertDialog>
 
-                <AddToCartButton />
+                <AddToCartButton/>
                 <Table>
                     <Thead>
                         <Tr>
-                            <Th style={{ textAlign: 'center', borderTopLeftRadius: '10px' }}>Produto</Th>
-                            <Th style={{ textAlign: 'center' }}>Quantidade</Th>
-                            <Th style={{ textAlign: 'center', borderTopRightRadius: '10px' }}>Total</Th>
+                            <Th style={{textAlign: 'center', borderTopLeftRadius: '10px'}}>Produto</Th>
+                            <Th style={{textAlign: 'center'}}>Quantidade</Th>
+                            <Th style={{textAlign: 'center', borderTopRightRadius: '10px'}}>Total</Th>
                         </Tr>
                     </Thead>
                     <Tbody>
 
                         {cart.length === 0 ?
                             <Tr>
-                                <Td />
+                                <Td/>
                                 <Td colSpan={3} style={{
                                     textAlign: 'center',
                                     height: '3em',
@@ -280,19 +254,19 @@ function NewSalePage() {
                                 }}>
                                     Carrinho vazio!
                                 </Td>
-                                <Td />
+                                <Td/>
                             </Tr> :
                             cart.map((product: SoldProduct, index: number) => (
-                                <Tr key={product.id_produto} style={{ borderBottomLeftRadius: index === cart.length - 1 ? '10px' : '0px', borderBottomRightRadius: index === cart.length - 1 ? '10px' : '0px' }}>
-                                    <Td style={{ width: '70%' }}>{products.find(p => p.id === product.id_produto)?.descricao}</Td>
-                                    <Td style={{ textAlign: 'center', width: '10%', padding: '0px' }}>
+                                <Tr key={product.id_produto} style={{borderBottomLeftRadius: index === cart.length - 1 ? '10px' : '0px', borderBottomRightRadius: index === cart.length - 1 ? '10px' : '0px'}}>
+                                    <Td style={{width: '70%'}}>{products.find(p => p.id === product.id_produto)?.descricao}</Td>
+                                    <Td style={{textAlign: 'center', width: '10%', padding: '0px'}}>
                                         <ButtonGroup size="sm">
                                             <Button onClick={() => handleRemoveProduct(product)}>-</Button>
-                                            <Input type="text" style={{ height: 'inherit', textAlign: 'center' }} value={product.quantidade} readOnly />
+                                            <Input type="text" style={{height: 'inherit', textAlign: 'center'}} value={product.quantidade} readOnly/>
                                             <Button onClick={() => {
                                                 const updatedCart = cart.map((p) => {
                                                     if (p.id_produto === product.id_produto) {
-                                                        return { ...p, quantidade: p.quantidade! + 1 };
+                                                        return {...p, quantidade: p.quantidade! + 1};
                                                     }
                                                     return p;
                                                 });
@@ -300,16 +274,16 @@ function NewSalePage() {
                                             }}>+</Button>
                                         </ButtonGroup>
                                     </Td>
-                                    <Td style={{ textAlign: 'center', width: '10%' }}>R${(products.find(p => p.id === product.id_produto)?.preco_venda! * product.quantidade).toFixed(2)}</Td>
+                                    <Td style={{textAlign: 'center', width: '10%'}}>R${(products.find(p => p.id === product.id_produto)?.preco_venda! * product.quantidade).toFixed(2)}</Td>
                                 </Tr>
                             ))
                         }
                     </Tbody>
                 </Table>
-                <Box style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '10px' }}>
-                    <Text style={{ color: 'black', fontWeight: 'bold' }}>Total: R${cart.reduce((total, product) => total + product.quantidade! * products.find(p => p.id === product.id_produto)?.preco_venda!, 0).toFixed(2)}</Text>
+                <Box style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '10px'}}>
+                    <Text style={{color: 'black', fontWeight: 'bold'}}>Total: R${cart.reduce((total, product) => total + product.quantidade! * products.find(p => p.id === product.id_produto)?.preco_venda!, 0).toFixed(2)}</Text>
                 </Box>
-                <ProductsSelectionCard isOpen={isOpen} onClose={onClose} initialRef={initialRef} products={products} onClickHandler={handleAddToCart} />
+                <ProductsSelectionCard isOpen={isOpen} onClose={onClose} initialRef={initialRef} products={products} onClickHandler={handleAddToCart}/>
             </Box>
         );
     }
@@ -319,10 +293,10 @@ function NewSalePage() {
             <Box>
                 <Stack dir="row" spacing={4}>
                     <Button
-                        leftIcon={<FaCartPlus />}
+                        leftIcon={<FaCartPlus/>}
                         aria-label="Add to Cart"
                         marginBottom={"10px"}
-                        style={{ marginLeft: "auto" }}
+                        style={{marginLeft: "auto"}}
                         onClick={onOpen}>
                         Adicionar produto
                     </Button>
@@ -332,25 +306,25 @@ function NewSalePage() {
     }
 
     async function saveSaleOnDb(sale: Sale): Promise<Sale | null> {
-        const { data, error } = await supabase.from('vendas').insert(sale);
+        const {data, error} = await supabase.from('vendas').insert(sale);
         if (error) {
-            setAlert({ status: "error", message: error.message });
+            setAlert({status: "error", message: error.message});
             return null;
         }
         return data;
     }
 
     async function addDebtToClient(client: Client, debt: number) {
-        const { error } = await supabase
+        const {error} = await supabase
             .from('clientes')
-            .update({ saldo_devedor: client.saldo_devedor + debt })
+            .update({saldo_devedor: client.saldo_devedor + debt})
             .eq('id', client.id);
         if (error) {
-            setAlert({ status: "error", message: "Erro ao atualizar o saldo devedor do cliente: " + error.message })
+            setAlert({status: "error", message: "Erro ao atualizar o saldo devedor do cliente: " + error.message})
         }
     }
 
-    function SelectPayment({ sale, setSale, cart, products }: { sale: Sale, setSale: React.Dispatch<React.SetStateAction<Sale>>, cart: SoldProduct[], products: Product[] }) {
+    function SelectPayment({sale, setSale, cart, products}: { sale: Sale, setSale: React.Dispatch<React.SetStateAction<Sale>>, cart: SoldProduct[], products: Product[] }) {
         const [discount, setDiscount] = useState(0);
         const [paidValue, setPaidValue] = useState<number>(0);
         const [percentualDiscount, setPercentualDiscount] = useState(true);
@@ -381,29 +355,29 @@ function NewSalePage() {
         function validateSale(sale: Sale) {
             if (!sale.id_cliente) {
                 alert("Id do cliente inválido: " + sale.id_cliente)
-                setAlert({ status: "error", message: "Selecione um cliente" });
+                setAlert({status: "error", message: "Selecione um cliente"});
                 return false;
             }
             if (cart.length === 0) {
                 alert("Carrinho vazio!")
-                setAlert({ status: "error", message: "Adicione produtos ao carrinho" });
+                setAlert({status: "error", message: "Adicione produtos ao carrinho"});
                 return false;
             }
             if (paymentMethod === "") {
                 alert("Forma de pagamento inválida!")
-                setAlert({ status: "error", message: "Escolha uma forma de pagamento" });
+                setAlert({status: "error", message: "Escolha uma forma de pagamento"});
                 return false;
             }
             if (!validatePaidValue(paidValue)) {
                 alert("Valor pago inválido!")
-                setAlert({ status: "error", message: "O valor pago + desconto deve ser menor ou igual ao valor total da compra" });
+                setAlert({status: "error", message: "O valor pago + desconto deve ser menor ou igual ao valor total da compra"});
                 return false;
             }
             if (!validateDiscount(discount, percentualDiscount)) {
                 if (percentualDiscount) {
-                    setAlert({ status: "error", message: "O desconto percentual deve ser maior ou igual a 0 e menor ou igual a 30%" });
+                    setAlert({status: "error", message: "O desconto percentual deve ser maior ou igual a 0 e menor ou igual a 30%"});
                 } else {
-                    setAlert({ status: "error", message: "O desconto real deve ser maior ou igual a 0 e menor ou igual ao valor da compra" });
+                    setAlert({status: "error", message: "O desconto real deve ser maior ou igual a 0 e menor ou igual ao valor da compra"});
                 }
                 return false;
             }
@@ -414,7 +388,7 @@ function NewSalePage() {
             const newSale = {
                 ...sale,
                 id_cliente: selectedClient!.id,
-                data_hora: new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }),
+                data_hora: new Date().toLocaleString("pt-BR", {timeZone: "America/Sao_Paulo"}),
                 desconto: discount,
                 desconto_percentual: percentualDiscount,
                 forma_pagamento: paymentMethod,
@@ -426,18 +400,17 @@ function NewSalePage() {
         }
 
         async function finishSale(sale: Sale) {
-            if (!validateSale(sale)){
+            if (!validateSale(sale)) {
                 alert("Validação falhou mas vamo tentar")
-            }
-            else {
+            } else {
                 const savedSale = await saveSaleOnDb(sale);
                 if (savedSale) {
                     cart.forEach(async (item) => {
-                        const { error } = await supabase
+                        const {error} = await supabase
                             .from('produtos_vendidos')
                             .insert([
                                 {
-                                    id_venda: savedSale.id, 
+                                    id_venda: savedSale.id,
                                     id_produto: item.id_produto,
                                     quantidade: item.quantidade
                                 }
@@ -457,24 +430,24 @@ function NewSalePage() {
             <Box>
                 {validateDiscount(discount, percentualDiscount) ? null : (
                     <Alert status="error" marginTop={4}>
-                        <AlertIcon />
+                        <AlertIcon/>
                         {percentualDiscount ? "O desconto percentual deve ser maior ou igual a 0 e menor ou igual a 30%" : "O desconto real deve ser maior ou igual a 0 e menor ou igual ao valor da compra"}
                     </Alert>
                 )}
                 {paymentMethod !== "" ? null : (
                     <Alert status="error" marginTop={4}>
-                        <AlertIcon />
+                        <AlertIcon/>
                         Escolha uma forma de pagamento</Alert>
                 )}
                 {validatePaidValue(paidValue) ? null : (
                     <Alert status="error" marginTop={4}>
-                        <AlertIcon />
+                        <AlertIcon/>
                         O valor pago + desconto deve ser menor ou igual ao valor total da compra
                     </Alert>
                 )}
                 {(total - calculateDiscount() - paidValue) !== 0 || cart.length === 0 ? null : (
                     <Alert status="success" marginTop={4}>
-                        <AlertIcon />
+                        <AlertIcon/>
                         Compra paga à vista ou no cartão que delícia cara
                     </Alert>
                 )}
@@ -491,7 +464,7 @@ function NewSalePage() {
                                 setPaidValue(parseFloat(e.target.value) || 0);
                             }} onBlur={(e) => {
                                 e.target.value = parseFloat(e.target.value || "0").toFixed(2);
-                            }} />
+                            }}/>
                         </InputGroup>
                         <InputGroup mr={2} flex="1" hidden={paymentMethod !== "cartao"}>
                             <InputLeftAddon bg={"pink.500"} color={"white"}>Parcelas</InputLeftAddon>
@@ -499,7 +472,7 @@ function NewSalePage() {
                                 setInstallments(parseInt(e.target.value) || 1);
                             }} onBlur={(e) => {
                                 e.target.value = (e.target.value || "0");
-                            }} />
+                            }}/>
                         </InputGroup>
                         <InputGroup mr={2} flex="1" marginRight={"0px"}>
                             <InputLeftAddon bg={"pink.500"} color={"white"}>Desconto</InputLeftAddon>
@@ -511,7 +484,7 @@ function NewSalePage() {
                             }} onBlur={(e) => {
                                 setDiscount(parseFloat(e.target.value) || 0);
                                 e.target.value = percentualDiscount ? parseFloat(e.target.value).toString() : parseFloat(e.target.value).toFixed(2);
-                            }} />
+                            }}/>
                             <InputRightAddon onClick={() => setPercentualDiscount(!percentualDiscount)} cursor="pointer" w="50px" textAlign="center">{percentualDiscount ? "%" : "R$"}</InputRightAddon>
                         </InputGroup>
                     </Box>
@@ -534,13 +507,13 @@ function NewSalePage() {
                                 <StatNumber>R$ {(paidValue || 0).toFixed(2)}</StatNumber>
                             </Stat>
                             <Stat hidden={paymentMethod !== "cartao"}>
-                                <StatLabel >Parcelas:</StatLabel>
+                                <StatLabel>Parcelas:</StatLabel>
                                 <StatNumber>{installments}x R$ {(paidValue / installments || 0).toFixed(2)}</StatNumber>
                             </Stat>
                         </StatGroup>
                     </Box>
                     <Box display="flex" justifyContent="flex-end">
-                        <Button colorScheme="pink" onClick={() => finishSale(buildSale())} style={{ marginTop: "10px" }}>Concluir venda</Button>
+                        <Button colorScheme="pink" onClick={() => finishSale(buildSale())} style={{marginTop: "10px"}}>Concluir venda</Button>
                     </Box>
                 </Box>
             </Box>
@@ -552,26 +525,26 @@ function NewSalePage() {
         <>
             {messageAlert && (
                 <Alert status={messageAlert.status as "error" | "info" | "warning" | "success"}>
-                    <AlertIcon />
+                    <AlertIcon/>
                     {messageAlert.message}
                 </Alert>
             )}
 
             <Stepper index={activeStep} orientation='vertical' height='400px' gap='0'>
                 {steps.map((step, index) => (
-                    <Step key={index} >
+                    <Step key={index}>
                         <StepIndicator>
                             <StepStatus
-                                complete={<StepIcon />}
-                                incomplete={<StepNumber />}
-                                active={<StepNumber />}
+                                complete={<StepIcon/>}
+                                incomplete={<StepNumber/>}
+                                active={<StepNumber/>}
                             />
                         </StepIndicator>
 
                         <Box flexShrink='0'>
                             <StepTitle>{step.title}</StepTitle>
                             <StepDescription>{step.description}</StepDescription>
-                            {index === 0 && <SelectClient />}
+                            {index === 0 && <SelectClient/>}
                             {index === 1 && <SelectProduct
                                 cart={cart}
                                 products={products}
@@ -580,9 +553,9 @@ function NewSalePage() {
                                 onClose={onClose}
                                 initialRef={initialRef}
                             />}
-                            {index === 2 && <SelectPayment sale={sale} setSale={setSale} cart={cart} products={products} />}
+                            {index === 2 && <SelectPayment sale={sale} setSale={setSale} cart={cart} products={products}/>}
                         </Box>
-                        <StepSeparator />
+                        <StepSeparator/>
                     </Step>
                 ))}
             </Stepper>
