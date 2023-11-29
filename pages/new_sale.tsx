@@ -28,7 +28,8 @@ import {
     Th,
     Thead,
     Tr,
-    useDisclosure
+    useDisclosure,
+    useToast
 } from "@chakra-ui/react";
 import {Step, StepDescription, StepIcon, StepIndicator, StepNumber, Stepper, StepSeparator, StepStatus, StepTitle, useSteps,} from '@chakra-ui/stepper'
 import {Database} from "@/lib/database.types";
@@ -67,6 +68,8 @@ function NewSalePage() {
         index: 0,
         count: steps.length,
     })
+
+    const toast = useToast();
 
     const [sale, setSale] = useState<Sale>({
         id_cliente: selectedClient?.id!,
@@ -306,12 +309,14 @@ function NewSalePage() {
     }
 
     async function saveSaleOnDb(sale: Sale): Promise<Sale | null> {
-        const {data, error} = await supabase.from('vendas').insert(sale);
+        const {data, error} = await supabase.from('vendas').insert(sale).select();
+
         if (error) {
             setAlert({status: "error", message: error.message});
             return null;
         }
-        return data;
+
+        return Array.isArray(data) && data.length > 0 ? data[0] : null;
     }
 
     async function addDebtToClient(client: Client, debt: number) {
@@ -320,8 +325,10 @@ function NewSalePage() {
             .update({saldo_devedor: client.saldo_devedor + debt})
             .eq('id', client.id);
         if (error) {
-            setAlert({status: "error", message: "Erro ao atualizar o saldo devedor do cliente: " + error.message})
+            setAlert({status: "error", message: "Erro ao atualizar o saldo devedor do cliente: " + error.message});
+            return error;
         }
+        return null;
     }
 
     function SelectPayment({sale, setSale, cart, products}: { sale: Sale, setSale: React.Dispatch<React.SetStateAction<Sale>>, cart: SoldProduct[], products: Product[] }) {
@@ -388,7 +395,7 @@ function NewSalePage() {
             const newSale = {
                 ...sale,
                 id_cliente: selectedClient!.id,
-                data_hora: new Date().toLocaleString("pt-BR", {timeZone: "America/Sao_Paulo"}),
+                data_hora: new Date().toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}),
                 desconto: discount,
                 desconto_percentual: percentualDiscount,
                 forma_pagamento: paymentMethod,
@@ -399,13 +406,20 @@ function NewSalePage() {
             return newSale;
         }
 
-        async function finishSale(sale: Sale) {
+        async function finishSale(sale: Sale, selectedClient: Client) {
+            
             if (!validateSale(sale)) {
-                alert("Validação falhou mas vamo tentar")
+                toast({
+                    title: "Transaction Failed",
+                    description: "Validation failed",
+                    status: "error",
+                    duration: 9000,
+                    isClosable: true,
+                });
             } else {
                 const savedSale = await saveSaleOnDb(sale);
-                if (savedSale) {
-                    cart.forEach(async (item) => {
+                if (savedSale !== null) {
+                    for (const item of cart) {
                         const {error} = await supabase
                             .from('produtos_vendidos')
                             .insert([
@@ -417,10 +431,44 @@ function NewSalePage() {
                             ]);
                         if (error) {
                             console.error('Error: ', error);
+                            toast({
+                                title: "Falha ao concluir venda",
+                                description: `Erro: ${error}`,
+                                status: "error",
+                                duration: 9000,
+                                isClosable: true,
+                            });
                         }
+                    }
+
+                    const error = await addDebtToClient(selectedClient, sale.total - sale.valor_pago);
+                    if (error) {
+                        console.error('Error: savedSale is null');
+                        toast({
+                            title: "Registro de venda falhou",
+                            description: "Erro: falha ao salvar venda",
+                            status: "error",
+                            duration: 9000,
+                            isClosable: true,
+                        });
+                    }
+
+                    toast({
+                        title: "Venda registrada",
+                        description: "Venda concluída com sucesso",
+                        status: "success",
+                        duration: 9000,
+                        isClosable: true,
                     });
                 } else {
                     console.error('Error: savedSale is null');
+                    toast({
+                        title: "Registro de venda falhou",
+                        description: "Erro: falha ao salvar venda",
+                        status: "error",
+                        duration: 9000,
+                        isClosable: true,
+                    });
                 }
             }
         }
@@ -513,7 +561,7 @@ function NewSalePage() {
                         </StatGroup>
                     </Box>
                     <Box display="flex" justifyContent="flex-end">
-                        <Button colorScheme="pink" onClick={() => finishSale(buildSale())} style={{marginTop: "10px"}}>Concluir venda</Button>
+                        <Button colorScheme="pink" onClick={() => finishSale(buildSale(), selectedClient!!)} style={{marginTop: "10px"}}>Concluir venda</Button>
                     </Box>
                 </Box>
             </Box>
