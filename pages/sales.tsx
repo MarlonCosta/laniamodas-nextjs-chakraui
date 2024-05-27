@@ -97,10 +97,7 @@ export default function SalesPage() {
                     </Thead>
                     <Tbody>
                         {filteredSales.map((sale) => (
-                            <Tr key={sale.id} onClick={() => openSaleHandler(sale)}>
-
-
-                            </Tr>
+                            <Tr key={sale.id} onClick={() => openSaleHandler(sale)}></Tr>
                         ))}
                     </Tbody>
                 </Table>

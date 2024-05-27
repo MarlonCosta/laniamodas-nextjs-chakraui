@@ -29,7 +29,7 @@ export const ClientCard = ({isOpen, onClose, initialRef, client, setClient}: Cli
     const [numero_endereco, setNumero_endereco] = useState(client?.numero_endereco);
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
-    const [isEditing, setIsEditing] = useState(false);
+    const [isEditing, setIsEditing] = useState(client ? true : false);
 
     useEffect(() => {
         if (client) {
